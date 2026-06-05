@@ -1,0 +1,3 @@
+src/app/(auth)/signup/_components/buttonHandler.tsx(95,17): error TS2554: Expected 10 arguments, but got 1.
+src/app/(auth)/signup/_components/buttonHandler.tsx(112,17): error TS2554: Expected 6 arguments, but got 1.
+src/app/(auth)/signup/_components/buttonHandler.tsx(129,17): error TS2554: Expected 8 arguments, but got 1.
