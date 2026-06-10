@@ -103,8 +103,8 @@ const SignupOtp = ({
           <div className="flex items-center justify-center rounded-md">
             <LOGO />
           </div>
-          <span className="sr-only">Hilexa Vendor</span>
-          <h1 className="text-2xl font-bold">Welcome to Hilexa Vendor</h1>
+          <span className="sr-only">trivllo Vendor</span>
+          <h1 className="text-2xl font-bold">Welcome to trivllo Vendor</h1>
         </a>
         <FieldDescription>
           Already have an account?{" "}

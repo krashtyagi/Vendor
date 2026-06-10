@@ -73,9 +73,9 @@ function LoginForm({
                 <div className="flex items-center justify-center rounded-md">
                   <LOGO />
                 </div>
-                <span className="sr-only">Hilexa Vendor</span>
+                <span className="sr-only">trivllo Vendor</span>
               </a>
-              <h1 className="text-xl font-bold">Welcome to Hilexa Vendor</h1>
+              <h1 className="text-xl font-bold">Welcome to trivllo Vendor</h1>
               <FieldDescription>
                 Don&apos;t have an account? <a href="/signup">Sign up</a>
               </FieldDescription>
