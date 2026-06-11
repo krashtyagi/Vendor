@@ -1,3 +1,127 @@
+// "use client";
+
+// import { Field, FieldLabel } from "@/components/ui/field";
+// import { useState } from "react";
+// import { useAuthStore } from "@/stores/auth.store";
+// import { toast } from "sonner";
+// import { Loader2, UploadCloud, CheckCircle2, Plus } from "lucide-react";
+// import { cn } from "@/lib/utils";
+
+// interface ImageFieldProps {
+//   label: string;
+//   docName?: string;
+//   variant?: "default" | "grid"; // Add this
+//   onUploadSuccess: (data: { url: string; public_id: string; resource_type: string; name: string }) => void;
+// }
+
+// const ImageField = ({
+//   label,
+//   docName,
+//   variant = "default",
+//   onUploadSuccess
+// }: ImageFieldProps) => {
+//   const [preview, setPreview] = useState<string | null>(null);
+//   const [uploading, setUploading] = useState(false);
+//   const [isUploaded, setIsUploaded] = useState(false);
+//   const { uploadFile } = useAuthStore();
+
+//   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const file = e.target.files?.[0];
+//     if (!file) return;
+
+//     const imageUrl = URL.createObjectURL(file);
+//     setPreview(imageUrl);
+//     setUploading(true);
+//     setIsUploaded(false);
+
+//     const res = await uploadFile(file);
+//     setUploading(false);
+
+//     if (res.success && res.url) {
+//       setIsUploaded(true);
+//       toast.success(`${label} uploaded`);
+//       onUploadSuccess({
+//         url: res.url,
+//         public_id: res.public_id || "",
+//         resource_type: res.resource_type || "image",
+//         name: docName || file.name
+//       });
+
+//       // If it's a grid (gallery), reset preview so the user can upload more
+//       if (variant === "grid") {
+//         setPreview(null);
+//         setIsUploaded(false);
+//       }
+//     } else {
+//       toast.error(res.message || "Upload failed");
+//       setPreview(null);
+//     }
+//   };
+
+//   // GRID VARIANT (Step 3 Gallery)
+//   if (variant === "grid") {
+//     return (
+//       <div className={cn(
+//         "relative w-full aspect-square group border-2 border-dashed border-white/10 rounded-2xl transition-all flex flex-col items-center justify-center bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50",
+//         uploading && "pointer-events-none"
+//       )}>
+//         <div className="flex flex-col items-center justify-center text-center p-2">
+//           <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors mb-1" />
+//           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{label}</span>
+//         </div>
+
+//         <input
+//           type="file"
+//           accept="image/*"
+//           onChange={handleImageChange}
+//           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+//         />
+
+//         {uploading && (
+//           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+//             <Loader2 className="w-5 h-5 animate-spin text-primary" />
+//           </div>
+//         )}
+//       </div>
+//     );
+//   }
+
+//   // DEFAULT VARIANT (Step 1 & 2)
+//   return (
+//     <Field className="w-full">
+//       <FieldLabel className="mb-2 block text-sm font-medium text-slate-300">{label}</FieldLabel>
+//       <div className={cn(
+//         "relative group border-2 border-dashed rounded-xl p-4 transition-all flex flex-col items-center justify-center min-h-[140px] bg-white/[0.02] border-white/10 hover:border-primary/40",
+//         isUploaded && "border-green-500/30 bg-green-500/[0.02]",
+//         uploading && "opacity-70 pointer-events-none"
+//       )}>
+//         {preview ? (
+//           <div className="relative flex flex-col items-center">
+//             <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-white/10 mb-2" />
+//             {isUploaded && (
+//               <div className="flex items-center gap-1 text-green-500 text-[10px] font-bold uppercase">
+//                 <CheckCircle2 className="w-3 h-3" /> Uploaded
+//               </div>
+//             )}
+//           </div>
+//         ) : (
+//           <div className="flex flex-col items-center text-center">
+//             <UploadCloud className="w-6 h-6 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
+//             <p className="text-xs text-muted-foreground font-medium">Click to upload</p>
+//           </div>
+//         )}
+//         <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+//         {uploading && (
+//           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl">
+//             <Loader2 className="w-5 h-5 animate-spin text-primary" />
+//           </div>
+//         )}
+//       </div>
+//     </Field>
+//   );
+// };
+
+// export default ImageField;
 "use client";
 
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -11,6 +135,7 @@ interface ImageFieldProps {
   label: string;
   docName?: string;
   variant?: "default" | "grid"; // Add this
+  multiple?: boolean;
   onUploadSuccess: (data: { url: string; public_id: string; resource_type: string; name: string }) => void;
 }
 
@@ -18,6 +143,7 @@ const ImageField = ({
   label,
   docName,
   variant = "default",
+  multiple = false,
   onUploadSuccess
 }: ImageFieldProps) => {
   const [preview, setPreview] = useState<string | null>(null);
@@ -26,39 +152,69 @@ const ImageField = ({
   const { uploadFile } = useAuthStore();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    setPreview(imageUrl);
     setUploading(true);
     setIsUploaded(false);
 
-    const res = await uploadFile(file);
-    setUploading(false);
+    if (multiple) {
+      const fileArray = Array.from(files);
 
-    if (res.success && res.url) {
-      setIsUploaded(true);
-      toast.success(`${label} uploaded`);
-      onUploadSuccess({
-        url: res.url,
-        public_id: res.public_id || "",
-        resource_type: res.resource_type || "image",
-        name: docName || file.name
+      const uploadPromises = fileArray.map(async (file) => {
+        try {
+          const res = await uploadFile(file);
+          if (res.success && res.url) {
+            toast.success(`${file.name} uploaded`);
+            onUploadSuccess({
+              url: res.url,
+              public_id: res.public_id || "",
+              resource_type: res.resource_type || "image",
+              name: docName || file.name
+            });
+          } else {
+            toast.error(res.message || `Upload failed for ${file.name}`);
+          }
+        } catch (error) {
+          toast.error(`Upload failed for ${file.name}`);
+        }
       });
 
-      // If it's a grid (gallery), reset preview so the user can upload more
+      await Promise.all(uploadPromises);
+      setUploading(false);
       if (variant === "grid") {
         setPreview(null);
         setIsUploaded(false);
       }
     } else {
-      toast.error(res.message || "Upload failed");
-      setPreview(null);
+      const file = files[0];
+      const imageUrl = URL.createObjectURL(file);
+      setPreview(imageUrl);
+
+      const res = await uploadFile(file);
+      setUploading(false);
+
+      if (res.success && res.url) {
+        setIsUploaded(true);
+        toast.success(`${label} uploaded`);
+        onUploadSuccess({
+          url: res.url,
+          public_id: res.public_id || "",
+          resource_type: res.resource_type || "image",
+          name: docName || file.name
+        });
+
+        if (variant === "grid") {
+          setPreview(null);
+          setIsUploaded(false);
+        }
+      } else {
+        toast.error(res.message || "Upload failed");
+        setPreview(null);
+      }
     }
   };
 
-  // GRID VARIANT (Step 3 Gallery)
   if (variant === "grid") {
     return (
       <div className={cn(
@@ -73,6 +229,7 @@ const ImageField = ({
         <input
           type="file"
           accept="image/*"
+          multiple={multiple}
           onChange={handleImageChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
@@ -86,7 +243,6 @@ const ImageField = ({
     );
   }
 
-  // DEFAULT VARIANT (Step 1 & 2)
   return (
     <Field className="w-full">
       <FieldLabel className="mb-2 block text-sm font-medium text-slate-300">{label}</FieldLabel>
@@ -110,7 +266,7 @@ const ImageField = ({
             <p className="text-xs text-muted-foreground font-medium">Click to upload</p>
           </div>
         )}
-        <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+        <input type="file" accept="image/*" multiple={multiple} onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
         {uploading && (
           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
