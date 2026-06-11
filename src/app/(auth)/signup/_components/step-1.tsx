@@ -271,10 +271,10 @@ export const Step_1 = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="hotel">Hotel</SelectItem>
-              <SelectItem value="cab">Cab</SelectItem>
+              {/* <SelectItem value="cab">Cab</SelectItem> */}
               <SelectItem value="tour">Tour</SelectItem>
-              <SelectItem value="bike">Bike</SelectItem>
-              <SelectItem value="adventure">Adventure</SelectItem>
+              {/* <SelectItem value="bike">Bike</SelectItem>
+              <SelectItem value="adventure">Adventure</SelectItem> */}
             </SelectContent>
           </Select>
           {errors.serviceType && <p className="text-xs font-medium text-destructive mt-1.5">{errors.serviceType.message}</p>}

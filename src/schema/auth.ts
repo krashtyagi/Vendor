@@ -8,11 +8,11 @@ export const LoginScshema = z.object({
     .min(8, { message: "Your password must be atleast 8 characters long" })
     .max(64, {
       message: "Your password can not be longer then 64 characters long",
-    })
-    .refine(
-      (value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ""),
-      "password should contain only alphabets and numbers",
-    ),
+    }),
+  // .refine(
+  //   (value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ""),
+  //   "password should contain only alphabets and numbers",
+  // ),
 });
 const mediaSchema = z.object({
   url: z.string().url("Invalid media URL"),
@@ -34,7 +34,13 @@ const locationSchema = z.object({
   coordinates: z.tuple([z.number(), z.number()]),
 });
 export type LoginFormProps = z.infer<typeof LoginScshema>;
-export const serviceTypeEnum = z.enum(["hotel", "cab", "tour", "bike", "adventure"]);
+export const serviceTypeEnum = z.enum([
+  "hotel",
+  "cab",
+  "tour",
+  "bike",
+  "adventure",
+]);
 export type serviceTypeEnumProps = z.infer<typeof serviceTypeEnum>;
 const RoleEnum = z.enum(["vendor", "customer", "admin"]);
 const GenderEnum = z.enum(["male", "female", "other"]);
@@ -139,8 +145,6 @@ export const hotelCreateSchema = z.object({
 
 // Type inference
 export type HotelCreatePayload = z.infer<typeof hotelCreateSchema>;
-
-
 
 export const ResetPasswordSchema = z.object({
   phone: z.string().min(10, { message: "Incorrect phone format" }),
