@@ -450,8 +450,8 @@ export default function Process() {
           <footer className="mt-8 max-w-[400px]">
             <FieldDescription className="text-center text-xs text-muted-foreground">
               By clicking continue, you agree to our{" "}
-              <a href="#" className="underline hover:text-primary transition-colors">Terms of Service</a>{" "}
-              and <a href="#" className="underline hover:text-primary transition-colors">Privacy Policy</a>.
+              <a href="/terms" target="_blank" className="underline hover:text-primary transition-colors font-semibold">Terms of Service</a>{" "}
+              and <a href="/privacy" target="_blank" className="underline hover:text-primary transition-colors font-semibold">Privacy Policy</a>.
             </FieldDescription>
           </footer>
         </div>

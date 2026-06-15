@@ -25,6 +25,7 @@ import { CitySearchInput } from "@/components/city-search-input";
 import { NewTourProps, NewTourSchema } from "./zod-schema";
 import { addTourService } from "@/services/fetch.service";
 import { useCurrentUser } from "@/services/queryes";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   return (
@@ -100,6 +101,7 @@ const AddTourForm = ({
     const current = form.getValues("images") || [];
     form.setValue("images", current.filter((_, i) => i !== index), { shouldValidate: true });
   };
+  const router = useRouter();
 
   const onSubmit = async (data: NewTourProps) => {
     setLoading(true);
@@ -108,7 +110,10 @@ const AddTourForm = ({
       toast.success("Tour created successfully!");
       form.reset(); setPreviews([]);
     } catch (err: any) { console.error(err); toast.error("Failed to create tour"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+      router.back();
+    }
   };
 
   return (

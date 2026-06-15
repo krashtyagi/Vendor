@@ -38,6 +38,7 @@ import { Verify } from "@/app/(auth)/authMiddleware";
 import { useCurrentUser } from "@/services/queryes";
 import { PageSkeleton } from "../_components/details.skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 export const amenityKeys = Object.keys(amenityIconMap) as (keyof typeof amenityIconMap)[];
 const AddRoomForm = ({
   setEditMode,
@@ -149,6 +150,7 @@ const AddRoomForm = ({
       { shouldValidate: true }
     );
   };
+  const router = useRouter();
 
   const onSubmit = async (data: NewRoomProps) => {
     setLoading(true);
@@ -164,6 +166,7 @@ const AddRoomForm = ({
       toast.error("Failed to create room");
     } finally {
       setLoading(false);
+      router.back();
     }
   };
   if (isLoading || !hotelId) {

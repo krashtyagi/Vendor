@@ -1,10 +1,39 @@
 import { axiosApi } from "@/lib/axios";
 
+const isTokenExpired = (token: string): boolean => {
+  if (!token) return true;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return false;
+    return payload.exp < Date.now() / 1000;
+  } catch (error) {
+    return true;
+  }
+};
+
 export const currentUser = async () => {
-  const token = localStorage.getItem("vendoeAccessToken");
+  const token = typeof window !== "undefined" ? localStorage.getItem("vendoeAccessToken") : null;
 
   if (!token) {
     throw new Error("No access token found");
+  }
+
+  if (typeof window !== "undefined" && isTokenExpired(token)) {
+    localStorage.removeItem("vendoeAccessToken");
+    localStorage.removeItem("status");
+    localStorage.removeItem("category");
+    window.location.reload();
+    throw new Error("Access token expired");
   }
 
   try {

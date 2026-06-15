@@ -145,8 +145,8 @@ function LoginForm({
         </form>
       </Form>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</a>{" "}
+        and <a href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</a>.
       </FieldDescription>
     </div>
   )
