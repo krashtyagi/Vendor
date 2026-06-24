@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/services/queryes";
 import { PageSkeleton } from "./(dashboard)/(categories)/rooms/_components/details.skeleton";
 import { useAuthStore } from "@/stores/auth.store";
 import LogoLoader from "@/components/loaders/logoloader";
+import { vendorAccessToken } from "@/services/auth";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -28,7 +29,7 @@ export default function Home() {
       } else {
         router.replace("/dashboard")
       }
-    } else if (localStorage.getItem("vendoeAccessToken") === null) {
+    } else if (localStorage.getItem(vendorAccessToken) === null) {
       router.replace("/login")
     }
   }, [data, mounted])

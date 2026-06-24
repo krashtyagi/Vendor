@@ -27,7 +27,7 @@ export default function LoginPage() {
   const { data } = useCurrentUser()
   const { draft } = useAuthStore()
   useEffect(() => {
-    if (data?.data?.role === "vendor" && localStorage.getItem("vendoeAccessToken") !== null) {
+    if (data?.data?.role === "vendor" && localStorage.getItem(vendorAccessToken) !== null) {
       if (draft) {
         router.push("/signup/process")
       } else {
@@ -52,6 +52,8 @@ export default function LoginPage() {
 
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
+import { vendorAccessToken } from "@/services/auth"
+import trivlloData from "@/../trivllo.json"
 
 function LoginForm({
   className,
@@ -73,9 +75,9 @@ function LoginForm({
                 <div className="flex items-center justify-center rounded-md">
                   <LOGO />
                 </div>
-                <span className="sr-only">trivllo Vendor</span>
+                <span className="sr-only">{trivlloData.company_name} Vendor</span>
               </a>
-              <h1 className="text-xl font-bold">Welcome to trivllo Vendor</h1>
+              <h1 className="text-xl font-bold">Welcome to {trivlloData.company_name} Vendor</h1>
               <FieldDescription>
                 Don&apos;t have an account? <a href="/signup">Sign up</a>
               </FieldDescription>
@@ -107,7 +109,15 @@ function LoginForm({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Password</FormLabel>
+                      <a
+                        href="/resetpassword"
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </a>
+                    </div>
                     <FormControl>
                       <div className="relative flex items-center">
                         <Input
@@ -145,8 +155,8 @@ function LoginForm({
         </form>
       </Form>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</a>{" "}
-        and <a href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
+        and <a href="#">Privacy Policy</a>.
       </FieldDescription>
     </div>
   )

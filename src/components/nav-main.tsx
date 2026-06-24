@@ -98,7 +98,7 @@ export function NavMain({ items }: NavMainProps) {
                 <CollapsibleContent className="transition-all duration-200">
                   <SidebarMenuSub className="ml-0 pl-7 border-l border-sidebar-border/50">
                     {item.items!.map((sub) => {
-                      const subActive = pathname === sub.url
+                      const subActive = pathname.split("/")[1] === sub.url.split("/")[0]
                       return (
                         <SidebarMenuSubItem key={sub.title}>
                           <SidebarMenuSubButton

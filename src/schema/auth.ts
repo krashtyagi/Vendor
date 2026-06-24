@@ -147,7 +147,7 @@ export const hotelCreateSchema = z.object({
 export type HotelCreatePayload = z.infer<typeof hotelCreateSchema>;
 
 export const ResetPasswordSchema = z.object({
-  phone: z.string().min(10, { message: "Incorrect phone format" }),
+  email: z.string().email({ message: "Incorrect email format" }),
   password: z
     .string()
     .min(8, { message: "Your password must be atleast 8 characters long" })

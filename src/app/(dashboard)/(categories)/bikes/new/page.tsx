@@ -35,6 +35,7 @@ import { addbikeService } from "@/services/fetch.service";
 import { PageSkeleton } from "../../rooms/_components/details.skeleton";
 import { useCurrentUser } from "@/services/queryes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 const bikeTypes = ["scooter", "cruiser", "sports", "standard"];
 const fuelTypes = ["petrol", "electric"];
@@ -145,7 +146,7 @@ const AddBikeForm = ({ setEditMode, }: {
       { shouldValidate: true }
     );
   };
-
+  const router = useRouter();
   const onSubmit = async (data: NewBikeProps) => {
     setLoading(true);
     try {
@@ -158,6 +159,7 @@ const AddBikeForm = ({ setEditMode, }: {
       toast.error("Failed to create bike");
     } finally {
       setLoading(false);
+      router.push("/bikes");
     }
   };
 

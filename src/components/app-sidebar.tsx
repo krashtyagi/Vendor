@@ -3,14 +3,21 @@
 import * as React from "react"
 import {
   IconBike,
+  IconBuildingCommunity,
   IconCalendar,
   IconCar,
   IconDashboard,
   IconDatabase,
+  IconDiscount2,
+  IconFileInvoice,
   IconHome,
   IconListDetails,
+  IconMapPin,
   IconMessage,
   IconMountain,
+  IconPhone,
+  IconSpeakerphone,
+  IconTag,
   IconTower,
 } from "@tabler/icons-react"
 
@@ -43,39 +50,50 @@ export const data = {
       { title: "Rooms", url: "/rooms", icon: IconHome },
       { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
-      { title: "Invoice", url: "/invoice", icon: IconDatabase },
+      { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
+      { title: "Listing", url: "/listing", icon: IconBuildingCommunity }
     ],
     adventure: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
       { title: "Reservation", url: "/reservation", icon: IconListDetails },
       { title: "Adventure", url: "/adventures", icon: IconMountain },
-      // { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
-      { title: "Invoice", url: "/invoice", icon: IconDatabase },
+      { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
+      { title: "Listing", url: "/listing", icon: IconMapPin }
     ],
     cab: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
       { title: "Reservation", url: "/reservation", icon: IconListDetails },
       { title: "Cabs", url: "/cabs", icon: IconCar },
-      // { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
-      { title: "Invoice", url: "/invoice", icon: IconDatabase },
+      { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
+      { title: "Listing", url: "/listing", icon: IconMapPin }
     ],
     bike: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
       { title: "Reservation", url: "/reservation", icon: IconListDetails },
       { title: "Bikes", url: "/bikes", icon: IconBike },
-      // { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
-      { title: "Invoice", url: "/invoice", icon: IconDatabase },
+      { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
+      { title: "Listing", url: "/listing", icon: IconMapPin }
     ],
     tour: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
       { title: "Reservation", url: "/reservation", icon: IconListDetails },
       { title: "Tours", url: "/tours", icon: IconTower },
-      // { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
-      { title: "Invoice", url: "/invoice", icon: IconDatabase },
+      { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
+      { title: "Listing", url: "/listing", icon: IconMapPin }
     ],
   },
 }
@@ -84,11 +102,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
 
-  // 1. FIXED: Set safe default state to prevent SSR/Hydration mismatches
   const [currCategory, setCurrCategory] = React.useState<keyof typeof data.navMain>("hotel");
 
   React.useEffect(() => {
-    // 2. FIXED: Safely sync category from localStorage on the client side
     const savedCategory = localStorage.getItem("category") as keyof typeof data.navMain;
     if (savedCategory && data.navMain[savedCategory]) {
       setCurrCategory(savedCategory);
@@ -99,7 +115,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [pathname, isMobile, setOpenMobile]);
 
-  // Fallback checking to prevent reading properties of undefined
   const activeNavigationItems = data.navMain[currCategory] || data.navMain.hotel;
 
   return (
@@ -117,7 +132,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* 3. FIXED: Passes the state-driven, dynamic navigation items schema */}
         <NavMain items={activeNavigationItems} />
       </SidebarContent>
 

@@ -102,7 +102,6 @@ const AddTourForm = ({
     form.setValue("images", current.filter((_, i) => i !== index), { shouldValidate: true });
   };
   const router = useRouter();
-
   const onSubmit = async (data: NewTourProps) => {
     setLoading(true);
     try {
@@ -112,7 +111,7 @@ const AddTourForm = ({
     } catch (err: any) { console.error(err); toast.error("Failed to create tour"); }
     finally {
       setLoading(false);
-      router.back();
+      router.push("/tours");
     }
   };
 

@@ -1,6 +1,7 @@
 // components/CompactFooter.tsx
-import { Github, Twitter, Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
+import { Github, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
 import Link from "next/link";
+import trivlloData from "@/../trivllo.json";
 
 export function CompactFooter() {
   const currentYear = new Date().getFullYear();
@@ -9,7 +10,7 @@ export function CompactFooter() {
     <footer className="border-t bg-muted/40 py-5 text-sm text-muted-foreground">
       <div className="container mx-auto px-6 flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
         <div>
-          Copyright © {currentYear} trivllo
+          Copyright © {currentYear} {trivlloData.company_name}
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
@@ -25,19 +26,16 @@ export function CompactFooter() {
         </div>
 
         <div className="flex items-center gap-5">
-          <a href="https://twitter.com/trivllo" target="_blank" rel="noopener noreferrer" aria-label="X">
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X">
             <Twitter className="h-4 w-4 hover:text-foreground transition-colors" />
           </a>
-          <a href="https://www.instagram.com/trivllo" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <Instagram className="h-4 w-4 hover:text-foreground transition-colors" />
           </a>
-          <a href="https://www.facebook.com/profile.php?id=61590569073379" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <Facebook className="h-4 w-4 hover:text-foreground transition-colors" />
-          </a>
-          <a href="https://www.youtube.com/@trivllo" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
             <Youtube className="h-4 w-4 hover:text-foreground transition-colors" />
           </a>
-          <a href="https://www.linkedin.com/company/trivllo" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
             <Linkedin className="h-4 w-4 hover:text-foreground transition-colors" />
           </a>
         </div>

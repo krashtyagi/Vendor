@@ -5,19 +5,29 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useSignUp } from "../hooks/use-signup";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/auth.store";
 
 const ProcessButtonHandler = ({
     currentStep,
     setCurrentStep,
     methods,
+    loading,
+    submitStep_1,
+    submitStep_2,
+    submitStep_3,
 }: {
     currentStep: number;
     methods: UseFormReturn<SignUpProps>;
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+    loading: boolean;
+    submitStep_1: any;
+    submitStep_2: any;
+    submitStep_3: any;
 }) => {
     const { getValues } = methods;
 
-    const { submitStep_1, submitStep_2, submitStep_3, loading } = useSignUp();
+    const { setCurrStep } = useAuthStore();
     switch (currentStep) {
 
         case 2:
@@ -29,7 +39,24 @@ const ProcessButtonHandler = ({
                     disabled={loading}
                     {...(
                         true && {
-                            onClick: () => {
+                            onClick: async (e) => {
+                                e.preventDefault();
+                                const isValid = await methods.trigger([
+                                    "serviceType",
+                                    "businessName",
+                                    "businessEmail",
+                                    "businessPhone",
+                                    "businessAddress",
+                                    "city",
+                                    "state",
+                                    "panNumber",
+                                    "aadhaarNumber",
+                                    "verificationDocs"
+                                ]);
+                                if (!isValid) {
+                                    toast.error("Please fill in all business details correctly.");
+                                    return;
+                                }
                                 submitStep_1(
                                     getValues("serviceType"),
                                     getValues("businessName"),
@@ -55,60 +82,116 @@ const ProcessButtonHandler = ({
             )
         case 3:
             return (
-                <Button
-                    type="submit"
-                    variant={"default"}
-                    className="w-full"
-                    disabled={loading}
-                    {...(
-                        true && {
-                            onClick: () => {
-                                submitStep_2(
-                                    getValues("bankName"),
-                                    getValues("accountNumber"),
-                                    getValues("ifscCode"),
-                                    getValues("branchName"),
-                                    getValues("accountHolderName"),
-                                    getValues("bankProof"),
-                                    setCurrentStep);
-                            },
-                        })}
-                >
-                    {
-                        loading ? <Spinner /> : "submit bank details"
-                    }
-                </Button>
+                <div className="flex gap-4 w-full">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-1/3"
+                        disabled={loading}
+                        onClick={() => {
+                            setCurrentStep(2);
+                            setCurrStep(2);
+                        }}
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant={"default"}
+                        className="w-2/3"
+                        disabled={loading}
+                        {...(
+                            true && {
+                                onClick: async (e) => {
+                                    e.preventDefault();
+                                    const isValid = await methods.trigger([
+                                        "bankName",
+                                        "accountNumber",
+                                        "ifscCode",
+                                        "branchName",
+                                        "accountHolderName",
+                                        "bankProof"
+                                    ]);
+                                    if (!isValid) {
+                                        toast.error("Please fill in all bank details correctly.");
+                                        return;
+                                    }
+                                    submitStep_2(
+                                        getValues("bankName"),
+                                        getValues("accountNumber"),
+                                        getValues("ifscCode"),
+                                        getValues("branchName"),
+                                        getValues("accountHolderName"),
+                                        getValues("bankProof"),
+                                        setCurrentStep);
+                                },
+                            })}
+                    >
+                        {
+                            loading ? <Spinner /> : "submit bank details"
+                        }
+                    </Button>
+                </div>
             )
         case 4:
             return (
-                <Button
-                    type="submit"
-                    variant={"default"}
-                    className="w-full"
-                    disabled={loading}
-                    {...(
-                        true && {
-                            onClick: () => {
-                                submitStep_3(
-                                    getValues("serviceType"),
-                                    getValues("name"),
-                                    getValues("hotelAddress"),
-                                    getValues("description"),
-                                    getValues("amenities") || [],
-                                    getValues("documents") || [],
-                                    getValues("images") || [],
-                                    getValues("hotelCity"),
-                                    getValues("location"),
-                                    setCurrentStep,
-                                    { adventureCategory: getValues("adventureCategory") }
-                                );
-                            },
-                        })}
-                >
-                    {
-                        loading ? <Spinner /> : "Save and submit"
-                    }
-                </Button>
+                <div className="flex gap-4 w-full">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-1/3"
+                        disabled={loading}
+                        onClick={() => {
+                            setCurrentStep(3);
+                            setCurrStep(3);
+                        }}
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant={"default"}
+                        className="w-2/3"
+                        disabled={loading}
+                        {...(
+                            true && {
+                                onClick: async (e) => {
+                                    e.preventDefault();
+                                    const isValid = await methods.trigger([
+                                        "name",
+                                        "description",
+                                        "hotelAddress",
+                                        "hotelCity",
+                                        "location",
+                                        "images",
+                                        "documents",
+                                        "amenities"
+                                    ]);
+                                    if (!isValid) {
+                                        toast.error("Please fill in all details. Make sure at least 5 images are uploaded.");
+                                        return;
+                                    }
+                                    submitStep_3(
+                                        getValues("serviceType"),
+                                        getValues("name"),
+                                        getValues("hotelAddress"),
+                                        getValues("description"),
+                                        getValues("amenities") || [],
+                                        getValues("documents") || [],
+                                        getValues("images") || [],
+                                        getValues("hotelCity"),
+                                        getValues("location"),
+                                        setCurrentStep,
+                                        { adventureCategory: getValues("adventureCategory") }
+                                    );
+                                },
+                            })}
+                    >
+                        {
+                            loading ? <Spinner /> : "Save and submit"
+                        }
+                    </Button>
+                </div>
             )
     }
     return (

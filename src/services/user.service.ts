@@ -1,4 +1,27 @@
+// import { axiosApi } from "@/lib/axios";
+
+// export const currentUser = async () => {
+//   const token = localStorage.getItem("vendoeAccessToken");
+
+//   if (!token) {
+//     throw new Error("No access token found");
+//   }
+
+//   try {
+//     const res = await axiosApi.get("/vendors/me", {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+
+//     return res.data;
+//   } catch (error) {
+//     console.error("currentUser service - API call failed:", error);
+//     throw error;
+//   }
+// };
 import { axiosApi } from "@/lib/axios";
+import { vendorAccessToken } from "./auth";
 
 const isTokenExpired = (token: string): boolean => {
   if (!token) return true;
@@ -8,10 +31,11 @@ const isTokenExpired = (token: string): boolean => {
     const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-      window.atob(base64)
+      window
+        .atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     const payload = JSON.parse(jsonPayload);
     if (!payload.exp) return false;
@@ -22,14 +46,17 @@ const isTokenExpired = (token: string): boolean => {
 };
 
 export const currentUser = async () => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("vendoeAccessToken") : null;
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem(vendorAccessToken)
+      : null;
 
   if (!token) {
     throw new Error("No access token found");
   }
 
   if (typeof window !== "undefined" && isTokenExpired(token)) {
-    localStorage.removeItem("vendoeAccessToken");
+    localStorage.removeItem(vendorAccessToken);
     localStorage.removeItem("status");
     localStorage.removeItem("category");
     window.location.reload();

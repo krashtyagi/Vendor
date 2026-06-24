@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import LogoLoader from "@/components/loaders/logoloader"
 import { ChartRangesProvider } from "@/context/auth/ChartRangesProvider"
+import { vendorAccessToken } from "@/services/auth"
 
 export default function Page(
     { children }: { children: React.ReactNode }
@@ -21,7 +22,7 @@ export default function Page(
     const [ok, setOk] = useState(false);
 
     useEffect(() => {
-        if (!localStorage.getItem("vendoeAccessToken")) {
+        if (!localStorage.getItem(vendorAccessToken)) {
             router.replace("/login");
         } else {
             setOk(true);

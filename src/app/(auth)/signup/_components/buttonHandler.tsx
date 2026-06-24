@@ -9,10 +9,16 @@ const ButtonHandler = ({
   currentStep,
   setCurrentStep,
   methods,
+  loading,
+  onGenerateOtp,
+  veryOtp,
 }: {
   currentStep: number;
   methods: UseFormReturn<SignUpProps>;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  loading: boolean;
+  onGenerateOtp: any;
+  veryOtp: any;
 }) => {
   const { formState, getFieldState, getValues } = methods;
   const { isDirty: isEmail } = getFieldState("email", formState);
@@ -28,12 +34,11 @@ const ButtonHandler = ({
 
   const { isDirty: isDob } = getFieldState("dob", formState);
   const { isDirty: otp } = getFieldState("otp", formState);
-  const { onGenerateOtp, veryOtp, loading } = useSignUp();
   switch (currentStep) {
     case 1:
       return (
         <Button
-        disabled={loading}
+          disabled={loading}
           type="submit"
           variant={"default"}
           className="w-full"
@@ -74,21 +79,29 @@ const ButtonHandler = ({
   }
 
   return (
-    <Button
-      disabled={loading}
-      type="submit"
-      variant={"default"}
-      className="w-full"
-      {...(
-        {
-          onClick: () => {
-            veryOtp(getValues("email"), getValues("otp"), setCurrentStep);
-          },
-        })}
-    >
-      {loading ? "Loading..." : "Verify otp"}
-    </Button>
-  )
+    <div className="flex gap-4 w-full justify-center px-12">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-1/3"
+        onClick={() => setCurrentStep(1)}
+        disabled={loading}
+      >
+        Back
+      </Button>
+      <Button
+        disabled={loading}
+        type="submit"
+        variant={"default"}
+        className="w-2/3"
+        onClick={() => {
+          veryOtp(getValues("email"), getValues("otp"), setCurrentStep);
+        }}
+      >
+        {loading ? "Loading..." : "Verify otp"}
+      </Button>
+    </div>
+  );
 
 };
 

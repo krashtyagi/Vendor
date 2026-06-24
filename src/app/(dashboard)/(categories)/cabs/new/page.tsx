@@ -26,6 +26,7 @@ import { NewCabProps, NewCabSchema } from "./zod-schema";
 import { addCabService } from "@/services/fetch.service";
 import { useCurrentUser } from "@/services/queryes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 const cabTypes = ["hatchback", "sedan", "suv", "luxury"];
 export default function Page() {
@@ -95,7 +96,7 @@ const AddCabForm = ({
     const current = form.getValues("images") || [];
     form.setValue("images", current.filter((_, i) => i !== index), { shouldValidate: true });
   };
-
+  const router = useRouter();
   const onSubmit = async (data: NewCabProps) => {
     setLoading(true);
     try {
@@ -103,7 +104,10 @@ const AddCabForm = ({
       toast.success("Cab created successfully!");
       form.reset(); setPreviews([]);
     } catch (err) { console.error(err); toast.error("Failed to create cab"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+      router.push("/cabs");
+    }
   };
 
   return (

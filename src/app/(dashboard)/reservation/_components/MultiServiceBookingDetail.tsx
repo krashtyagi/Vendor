@@ -144,9 +144,9 @@ export default function MultiServiceBookingDetail({ id }: { id: string }) {
     .slice(0, 2);
 
   return (
-    <div className="p-1 sm:p-3 md:p-2 max-w-[1200px] mx-auto space-y-2 animate-in fade-in duration-300">
+    <div className="p-1 sm:p-3 md:p-2 max-w-[1200px] mx-auto animate-in fade-in duration-300">
       {/* Back Button & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.back()}>
             <ArrowLeft size={16} />
@@ -171,7 +171,7 @@ export default function MultiServiceBookingDetail({ id }: { id: string }) {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-2">
         {/* Customer Card */}
         <Card className="rounded-xl border shadow-sm">
           <CardHeader className="pb-3">
@@ -180,8 +180,8 @@ export default function MultiServiceBookingDetail({ id }: { id: string }) {
               Customer Details
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-1">
               <Avatar className="h-12 w-12 rounded-xl border border-border">
                 <AvatarFallback className="bg-primary/5 text-primary font-bold rounded-xl">
                   {initials}
@@ -207,7 +207,7 @@ export default function MultiServiceBookingDetail({ id }: { id: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1">
               <InfoRow label="Service" value={booking.service.title} icon={FileText} />
               <InfoRow label="Category" value={booking.service.type.toUpperCase()} icon={Info} />
               <InfoRow label="Booking Date" value={formatDate(booking.bookingDate)} icon={Calendar} />

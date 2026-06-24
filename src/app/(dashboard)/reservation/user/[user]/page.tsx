@@ -16,12 +16,10 @@ const Page = (props: Props) => {
 
   if (isLoading) return <PageSkeleton />;
 
-  // Hotel uses the original hotel-specific detail page
   if (cat === "hotel") {
     return <DashboardPage id={id} />;
   }
 
-  // All other categories use the multi-service detail page
   return <MultiServiceBookingDetail id={id} />;
 }
 

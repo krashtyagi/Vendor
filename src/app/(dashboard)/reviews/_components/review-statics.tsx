@@ -80,24 +80,24 @@ export function ReviewStatistics({ comments = [] }: { comments: any[] }) {
             </div>
           </div>
         </div>
-        <Button variant="secondary" size="sm" className="bg-violet-600 hover:bg-violet-700 text-white rounded-lg h-9 px-4 gap-2">
+        {/* <Button variant="secondary" size="sm" className="bg-violet-600 hover:bg-violet-700 text-white rounded-lg h-9 px-4 gap-2">
           <CalendarIcon className="h-4 w-4" />
           Last 7 Days
           <ChevronDown className="h-4 w-4" />
-        </Button>
+        </Button> */}
       </CardHeader>
 
       <CardContent className="px-2">
         <ChartContainer config={chartConfig} className="h-[200px] w-full">
-          <BarChart 
-            data={chartData} 
+          <BarChart
+            data={chartData}
             margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
             barGap={8}
           >
-            <CartesianGrid 
-              vertical={false} 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
+            <CartesianGrid
+              vertical={false}
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
               opacity={0.4}
             />
             <XAxis
@@ -119,7 +119,7 @@ export function ReviewStatistics({ comments = [] }: { comments: any[] }) {
               cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }}
               content={<ChartTooltipContent hideLabel />}
             />
-            
+
             {/* Horizontal line at 0 */}
             <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1} />
 
@@ -140,4 +140,4 @@ export function ReviewStatistics({ comments = [] }: { comments: any[] }) {
       </CardContent>
     </Card>
   )
-}
+}

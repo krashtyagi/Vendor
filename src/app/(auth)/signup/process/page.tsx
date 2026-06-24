@@ -402,6 +402,8 @@ import { useAuthStore } from "@/stores/auth.store";
 import { CheckCircle2 } from "lucide-react";
 import ProcessButtonHandler from "../_components/processButtonHandler";
 import { useCurrentUser } from "@/services/queryes";
+import { Step2Skeleton, Step3Skeleton, ReviewSkeleton } from "../_components/skeletons";
+import { vendorAccessToken } from "@/services/auth";
 
 /* ✅ Dynamic imports (SSR disabled) */
 const Step_1 = dynamic(() => import("../_components/step-1").then(m => m.Step_1), { ssr: false });
@@ -419,7 +421,7 @@ export default function Process() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("vendoeAccessToken");
+      const token = localStorage.getItem(vendorAccessToken);
 
       if (!token) {
         router.replace("/login");
@@ -450,8 +452,8 @@ export default function Process() {
           <footer className="mt-8 max-w-[400px]">
             <FieldDescription className="text-center text-xs text-muted-foreground">
               By clicking continue, you agree to our{" "}
-              <a href="/terms" target="_blank" className="underline hover:text-primary transition-colors font-semibold">Terms of Service</a>{" "}
-              and <a href="/privacy" target="_blank" className="underline hover:text-primary transition-colors font-semibold">Privacy Policy</a>.
+              <a href="#" className="underline hover:text-primary transition-colors">Terms of Service</a>{" "}
+              and <a href="#" className="underline hover:text-primary transition-colors">Privacy Policy</a>.
             </FieldDescription>
           </footer>
         </div>
@@ -462,12 +464,12 @@ export default function Process() {
 
 function SignupForm() {
   const { currentStep, setCurrentStep } = useProcessContext();
-  const { methods, onHandleSubmit } = useSignUp();
+  const { methods, onHandleSubmit, loading, submitStep_1, submitStep_2, submitStep_3 } = useSignUp();
 
   return (
     <Form {...methods}>
       <form onSubmit={onHandleSubmit} className="space-y-8">
-        <FullProcessForm methods={methods} />
+        <FullProcessForm methods={methods} loading={loading} />
 
         {[2, 3, 4].includes(currentStep) && (
           <div className="pt-4 border-t"></div>
@@ -477,17 +479,34 @@ function SignupForm() {
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
           methods={methods}
+          loading={loading}
+          submitStep_1={submitStep_1}
+          submitStep_2={submitStep_2}
+          submitStep_3={submitStep_3}
         />
       </form>
     </Form>
   );
 }
 
-const FullProcessForm = ({ methods }: { methods: any }) => {
+const FullProcessForm = ({ methods, loading }: { methods: any; loading: boolean }) => {
   const { currentStep } = useProcessContext();
   const router = useRouter();
   const { data: u } = useCurrentUser();
   const serviceType = methods.watch("serviceType");
+
+  if (loading) {
+    switch (currentStep) {
+      case 2:
+        return <Step2Skeleton />;
+      case 3:
+        return <Step3Skeleton />;
+      case 4:
+        return <ReviewSkeleton />;
+      default:
+        return <ReviewSkeleton />;
+    }
+  }
 
   switch (currentStep) {
     case 2:

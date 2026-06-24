@@ -66,11 +66,11 @@ export function OverallRating({
     <Card className="max-w-full rounded-2xl shadow-sm border bg-card text-card-foreground overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-bold tracking-tight">Overall Rating</CardTitle>
-        <Button variant="secondary" size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-white rounded-lg gap-1 px-3">
+        {/* <Button variant="secondary" size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-white rounded-lg gap-1 px-3">
           This Week <ChevronDown className="h-3 w-3" />
-        </Button>
+        </Button> */}
       </CardHeader>
-      
+
       <CardContent className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4 items-start pt-2">
         {/* Left Side: Radial Gauge & Summary Block */}
         <div className="flex flex-col items-center gap-3">

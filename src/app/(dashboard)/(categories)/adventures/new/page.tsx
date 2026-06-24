@@ -29,15 +29,14 @@ import {
   type DistanceServiceProps, type TimeServiceProps, type FixedServiceProps, type PackageServiceProps,
   type ServiceType,
 } from "./zod-schema";
+import { useRouter } from "next/navigation";
 
 const SERVICE_TABS: { key: ServiceType; label: string; icon: React.ReactNode; desc: string }[] = [
-  { key: "distance", label: "Rafting", icon: <MapPin className="h-5 w-5" />, desc: "Distance based" },
-  { key: "time", label: "Paragliding", icon: <Wind className="h-5 w-5" />, desc: "Time based" },
-  { key: "fixed", label: "Bungee Jump", icon: <Zap className="h-5 w-5" />, desc: "Fixed price" },
-  { key: "package", label: "Trekking", icon: <Mountain className="h-5 w-5" />, desc: "Package based" },
+  { key: "distance", label: "rafting", icon: <MapPin className="h-5 w-5" />, desc: "Distance based" },
+  { key: "time", label: "paragliding", icon: <Wind className="h-5 w-5" />, desc: "Time based" },
+  { key: "fixed", label: "bungee", icon: <Zap className="h-5 w-5" />, desc: "Fixed price" },
+  { key: "package", label: "trekking", icon: <Mountain className="h-5 w-5" />, desc: "Package based" },
 ];
-
-// ── Shared image upload hook ──
 function useImageUpload(form: any) {
   const { uploadFile } = useAuthStore();
   const [uploading, setUploading] = useState(false);
@@ -74,8 +73,6 @@ function useImageUpload(form: any) {
 
   return { uploading, previews, setPreviews, handleImageChange, removeImage };
 }
-
-// ── Shared Images Section ──
 function ImagesSection({ form, uploading, handleImageChange, removeImage }: any) {
   return (
     <AccordionItem value="images">
@@ -104,8 +101,6 @@ function ImagesSection({ form, uploading, handleImageChange, removeImage }: any)
     </AccordionItem>
   );
 }
-
-// ── Shared Features Section ──
 function FeaturesSection({ form }: { form: any }) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "features" as any });
   return (
@@ -128,11 +123,8 @@ function FeaturesSection({ form }: { form: any }) {
     </AccordionItem>
   );
 }
-
-// ══════════════════════════════════════════════
-// ── Distance Form (Rafting) ──
-// ══════════════════════════════════════════════
 function DistanceForm({ adventureId }: { adventureId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm<DistanceServiceProps>({
     resolver: zodResolver(DistanceServiceSchema),
@@ -151,7 +143,11 @@ function DistanceForm({ adventureId }: { adventureId: string }) {
     setLoading(true);
     try { await addAdventureService(data); toast.success("Rafting service created!"); form.reset(); imgHook.setPreviews([]); }
     catch (err) { console.error(err); toast.error("Failed to create service"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+
+      router.push("/adventures");
+    }
   };
 
   return (
@@ -199,11 +195,8 @@ function DistanceForm({ adventureId }: { adventureId: string }) {
     </Form>
   );
 }
-
-// ══════════════════════════════════════════════
-// ── Time Form (Paragliding) ──
-// ══════════════════════════════════════════════
 function TimeForm({ adventureId }: { adventureId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm<TimeServiceProps>({
     resolver: zodResolver(TimeServiceSchema),
@@ -222,7 +215,10 @@ function TimeForm({ adventureId }: { adventureId: string }) {
     setLoading(true);
     try { await addAdventureService(data); toast.success("Paragliding service created!"); form.reset(); imgHook.setPreviews([]); }
     catch (err) { console.error(err); toast.error("Failed to create service"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+      router.push("/adventures");
+    }
   };
 
   return (
@@ -269,11 +265,8 @@ function TimeForm({ adventureId }: { adventureId: string }) {
     </Form>
   );
 }
-
-// ══════════════════════════════════════════════
-// ── Fixed Form (Bungee Jumping) ──
-// ══════════════════════════════════════════════
 function FixedForm({ adventureId }: { adventureId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm<FixedServiceProps>({
     resolver: zodResolver(FixedServiceSchema),
@@ -292,7 +285,10 @@ function FixedForm({ adventureId }: { adventureId: string }) {
     setLoading(true);
     try { await addAdventureService(data); toast.success("Bungee service created!"); form.reset(); imgHook.setPreviews([]); }
     catch (err) { console.error(err); toast.error("Failed to create service"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+      router.push("/adventures");
+    }
   };
 
   return (
@@ -331,11 +327,8 @@ function FixedForm({ adventureId }: { adventureId: string }) {
     </Form>
   );
 }
-
-// ══════════════════════════════════════════════
-// ── Package Form (Trekking) ──
-// ══════════════════════════════════════════════
 function PackageForm({ adventureId }: { adventureId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm<PackageServiceProps>({
     resolver: zodResolver(PackageServiceSchema),
@@ -355,7 +348,10 @@ function PackageForm({ adventureId }: { adventureId: string }) {
     setLoading(true);
     try { await addAdventureService(data); toast.success("Trekking package created!"); form.reset(); imgHook.setPreviews([]); }
     catch (err) { console.error(err); toast.error("Failed to create service"); }
-    finally { setLoading(false); }
+    finally {
+      setLoading(false);
+      router.push("/adventures");
+    }
   };
 
   return (
@@ -426,7 +422,6 @@ function PackageForm({ adventureId }: { adventureId: string }) {
   );
 }
 
-// ── Submit Buttons ──
 function SubmitButtons({ loading, uploading, form, setPreviews, label }: any) {
   return (
     <>
@@ -443,13 +438,25 @@ function SubmitButtons({ loading, uploading, form, setPreviews, label }: any) {
   );
 }
 
-// ══════════════════════════════════════════════
-// ── Main Page ──
-// ══════════════════════════════════════════════
 export default function Page() {
-  const [activeTab, setActiveTab] = useState<ServiceType>("distance");
-  const { data } = useCurrentUser();
-  const adventureId = data?.data?.serviceDetails?.id || "";
+  const { data: d } = useCurrentUser();
+  const catss = d?.data?.serviceDetails?.category?.toLowerCase();
+  const [activeTab, setActiveTab] = useState<ServiceType>();
+  const adventureId = d?.data?.serviceDetails?.id || "";
+
+  useEffect(() => {
+    if (catss) {
+      if (catss === "rafting") {
+        setActiveTab("distance");
+      } else if (catss === "paragliding") {
+        setActiveTab("time");
+      } else if (catss === "bungee") {
+        setActiveTab("fixed");
+      } else if (catss === "trekking") {
+        setActiveTab("package");
+      }
+    }
+  }, [catss]);
 
   return (
     <div className="space-y-6 pb-12">
@@ -460,7 +467,7 @@ export default function Page() {
         </CardHeader>
         <CardContent className="space-y-8">
           {/* ── Tabs ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {SERVICE_TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -479,7 +486,7 @@ export default function Page() {
                 {activeTab === tab.key && <div className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full" />}
               </button>
             ))}
-          </div>
+          </div> */}
 
           <Separator />
 

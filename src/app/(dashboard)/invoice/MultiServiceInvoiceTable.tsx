@@ -255,7 +255,6 @@ export function MultiServiceInvoiceTable() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
@@ -277,9 +276,7 @@ export function MultiServiceInvoiceTable() {
         </Button>
       </div>
 
-      {/* Table Card */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        {/* Controls */}
         <div className="p-4 border-b bg-muted/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="relative flex-1 sm:max-w-xs w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -312,7 +309,6 @@ export function MultiServiceInvoiceTable() {
           </div>
         </div>
 
-        {/* Data Table */}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/20">

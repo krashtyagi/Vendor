@@ -75,11 +75,11 @@ export const updateAdventureService = async (id: string, data: any) => {
   return res.data;
 };
 export const getAdventuresServices = async () => {
-  const res = await axiosApi.get("/adventures/vendor/adventures");
+  const res = await axiosApi.get("/services/vendor/services");
   return res.data;
 };
 export const getAdventureServiceDetailsById = async (id: string) => {
-  const res = await axiosApi.get(`/adventures/vendor/adventures/${id}`);
+  const res = await axiosApi.get(`/services/vendor/services/${id}`);
   return res.data;
 };
 

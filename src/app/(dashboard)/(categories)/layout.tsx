@@ -1,7 +1,6 @@
 import React from 'react'
 
 function layout({ children }: { children: React.ReactNode }) {
-    console.log("layout")
     return (
         <div className="flex flex-1 flex-col px-2">
             <div className="@container/main flex flex-1 flex-col gap-2">

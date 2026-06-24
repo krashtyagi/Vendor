@@ -272,22 +272,19 @@ export function InvoiceTbale() {
 
   return (
     <div className="w-full space-y-4">
-      {/* Filters & Controls */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Date Range Picker - placeholder */}
-          <Button
+          {/* <Button
             variant="outline"
             className="justify-start text-left font-normal w-[240px]"
           >
             5 June - 16 June 2028
           </Button>
 
-          {/* Status Dropdown - placeholder */}
           <Button variant="outline" className="w-[180px] justify-between">
             All Status
             <span className="ml-2">▼</span>
-          </Button>
+          </Button> */}
           <Button variant="outline" className="w-[120px] justify-between" onClick={() => refetch()} disabled={isRefetching}>
             {isRefetching ? <IconRefresh className="animate-spin " /> : <IconRefresh />}
             {

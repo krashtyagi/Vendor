@@ -47,7 +47,6 @@ const AddRoomForm = ({
     React.SetStateAction<{ id: string; mode: boolean }>
   >;
 }) => {
-  console.log("new registrations");
 
   const [hotelId, setHotelId] = useState<string>("")
   const { data, isLoading } = useCurrentUser()
@@ -58,6 +57,7 @@ const AddRoomForm = ({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [amenitySearch, setAmenitySearch] = useState("");
   const form = useForm<NewRoomProps>({
     resolver: zodResolver(NewRoomSchema),
     defaultValues: {
@@ -151,7 +151,6 @@ const AddRoomForm = ({
     );
   };
   const router = useRouter();
-
   const onSubmit = async (data: NewRoomProps) => {
     setLoading(true);
     try {
@@ -166,7 +165,8 @@ const AddRoomForm = ({
       toast.error("Failed to create room");
     } finally {
       setLoading(false);
-      router.back();
+
+      router.push("/rooms");
     }
   };
   if (isLoading || !hotelId) {
@@ -243,7 +243,7 @@ const AddRoomForm = ({
                         <Input
                           type="file"
                           multiple
-                          accept="image/jpeg,image/png,image/webp"
+                          // accept="image/jpeg,image/png,image/webp"
                           className="hidden"
                           onChange={handleImageChange}
                           disabled={uploading}
@@ -627,32 +627,40 @@ const AddRoomForm = ({
               <AccordionItem value="amenities">
                 <AccordionTrigger>Amenities & Features</AccordionTrigger>
                 <AccordionContent>
-                  {/* You can keep or adapt your CheckboxGrid component here */}
-                  {/* Example placeholder */}
+                  <div className="pt-2 pb-1">
+                    <Input
+                      placeholder="Search amenities..."
+                      value={amenitySearch}
+                      onChange={(e) => setAmenitySearch(e.target.value)}
+                      className="max-w-xs"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-4">
-                    {amenityKeys.map((id) => (
-                      <FormField
-                        key={id}
-                        control={form.control}
-                        name="amenities"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(id)}
-                                onCheckedChange={(checked) => {
-                                  const arr = field.value || [];
-                                  field.onChange(
-                                    checked ? [...arr, id] : arr.filter((v) => v !== id)
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal capitalize">{id.replace("_", " ")}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                    {amenityKeys
+                      .filter((id) => id.toLowerCase().includes(amenitySearch.toLowerCase()))
+                      .map((id) => (
+                        <FormField
+                          key={id}
+                          control={form.control}
+                          name="amenities"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(id)}
+                                  onCheckedChange={(checked) => {
+                                    const arr = field.value || [];
+                                    field.onChange(
+                                      checked ? [...arr, id] : arr.filter((v) => v !== id)
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal capitalize">{id.replace("_", " ")}</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>

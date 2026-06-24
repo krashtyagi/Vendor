@@ -1,4 +1,5 @@
 import { axiosApi } from "@/lib/axios";
+import { vendorAccessToken } from "@/services/auth";
 import { useCurrentUser } from "@/services/queryes";
 import { create } from "zustand";
 import { persist } from "zustand/middleware"; // 1. Import the middleware
@@ -46,6 +47,19 @@ interface AuthStates {
   resendOTP: (email: string) => Promise<any>;
   updateUser: (data: Partial<User>) => Promise<any>;
   uploadFile: (file: File) => Promise<any>;
+  forgotPassword: (data: {
+    email: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  verifyForgotPasswordOTP: (data: {
+    email: string;
+    otp: string;
+    endpoint: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (data: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }) => Promise<{ success: boolean; message: string }>;
 }
 
 interface Login_signup_Data {
@@ -96,7 +110,7 @@ export const useAuthStore = create<AuthStates>()(
           if (res.data.success) {
             const token = res.data.accessToken;
             const status = res.data.vendor.status;
-            localStorage.setItem("vendoeAccessToken", token);
+            localStorage.setItem(vendorAccessToken, token);
             localStorage.setItem("status", status);
             localStorage.setItem("category", cat);
 
@@ -125,7 +139,7 @@ export const useAuthStore = create<AuthStates>()(
             const token = res.data.accessToken;
             const status = res.data.data.vendor?.status || "approved";
             const currentStep = res.data.data.vendor?.currentStep || 1;
-            localStorage.setItem("vendoeAccessToken", token);
+            localStorage.setItem(vendorAccessToken, token);
             localStorage.setItem("status", status);
             localStorage.setItem(
               "category",
@@ -183,7 +197,7 @@ export const useAuthStore = create<AuthStates>()(
           const res = await axiosApi.post("/auth/verify-otp", data);
           if (res.data.success) {
             set({ currUser: res.data.data.user });
-            localStorage.setItem("vendoeAccessToken", res.data.accessToken);
+            localStorage.setItem(vendorAccessToken, res.data.accessToken);
             localStorage.setItem("status", res.data.data.vendor.status);
             return {
               success: true,
@@ -271,6 +285,71 @@ export const useAuthStore = create<AuthStates>()(
             success: false,
             message: err.response?.data?.message || "Upload failed",
           };
+        }
+      },
+
+      forgotPassword: async (data: { email: string }) => {
+        set({ isSiging: true });
+        try {
+          const res = await axiosApi.post("/auth/forgot-password", data);
+          return { success: res.data.success, message: res.data.message };
+        } catch (error) {
+          const err = error as any;
+          return {
+            success: false,
+            message: err.response?.data?.message || "Forgot password failed",
+          };
+        } finally {
+          set({ isSiging: false });
+        }
+      },
+
+      verifyForgotPasswordOTP: async (data: {
+        email: string;
+        otp: string;
+        endpoint: string;
+      }) => {
+        set({ isSiging: true });
+        try {
+          const res = await axiosApi.post(data.endpoint, {
+            email: data.email,
+            otp: data.otp,
+          });
+          if (res.data.success) {
+            return { success: true, message: res.data.message };
+          }
+          return {
+            success: false,
+            message: res.data.message || "Verification failed",
+          };
+        } catch (error) {
+          const err = error as any;
+          return {
+            success: false,
+            message: err.response?.data?.message || "Verification failed",
+          };
+        } finally {
+          set({ isSiging: false });
+        }
+      },
+
+      resetPassword: async (data: {
+        email: string;
+        otp: string;
+        newPassword: string;
+      }) => {
+        set({ isSiging: true });
+        try {
+          const res = await axiosApi.patch("/auth/reset-password", data);
+          return { success: res.data.success, message: res.data.message };
+        } catch (error) {
+          const err = error as any;
+          return {
+            success: false,
+            message: err.response?.data?.message || "Reset password failed",
+          };
+        } finally {
+          set({ isSiging: false });
         }
       },
     }),

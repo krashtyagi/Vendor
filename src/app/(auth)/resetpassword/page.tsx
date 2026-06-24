@@ -1,208 +1,246 @@
+'use client'
+import { useState } from "react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useResetPassword } from "@/hooks/auth/forgotPassword"
+import LOGO from "@/components/logo/logo"
+import trivlloData from "@/../trivllo.json"
+import { ErrorBoundary } from "react-error-boundary"
+import { Suspense } from "react"
+import { MessageModal } from "@/app/(dashboard)/(categories)/rooms/_components/RoomsListing"
+import { PageSkeleton } from "@/app/(dashboard)/(categories)/rooms/_components/details.skeleton"
+import { Eye, EyeOff } from "lucide-react"
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+import { REGEXP_ONLY_DIGITS } from "input-otp"
 
-
-type Props = {}
-
-const page = (props: Props) => {
+export default function ResetPasswordPage() {
   return (
-    <div>
-        {/* <ResetPasswordContextProvider>
-
-        <ResetPassword  />
-        </ResetPasswordContextProvider> */}
+    <ErrorBoundary fallback={<MessageModal title="Error" description="Something went wrong" />}>
+      <Suspense fallback={<PageSkeleton />}>
+        <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+          <div className="w-full max-w-sm">
+            <ResetPasswordForm />
+          </div>
         </div>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
-export default page
+function ResetPasswordForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  const [step, setStep] = useState(1) // 1: Email, 2: OTP, 3: New Password
+  const { methods, loading, onGenerateOtp, onVerify, onHandleSubmit } = useResetPassword()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  const email = methods.watch("email")
+  const otp = methods.watch("otp")
 
-// export function ResetPassword({  className }: {
-//   className?: string
-// }) {
-//   const { currentStep, setCurrentStep } = useResetPasswordForm();
-//   const { loading, methods, onHandleSubmit } = useResetPassword();
-//   const [onOTP, setOnOTP] = React.useState<string>("");
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//   return (
-//     <Form {...methods}>
-//       <form onSubmit={onHandleSubmit}>
-//         <Loader loading={loading}>
-//           <div className={cn("flex flex-col", className)} >
-//             {currentStep === 1 && (
-//               <div className={cn("flex flex-col   ", className)} >
-//                 <div className="flex flex-col items-center gap-2 text-center mt-5">
-//                   <a
-//                     href="#"
-//                     className="flex flex-col items-center gap-2 font-medium"
-//                   >
-//                     <div className="flex  items-center justify-center rounded-md">
-//                       <LOGO />
-//                     </div>
-//                     <span className="sr-only">Hilexa </span>
-//                   </a>
-//                   <h1 className="text-xl font-bold">Welcome to Hilexa</h1>
-//                   {/* <p>
-//                     Don&apos;t have an account? <a href="/signup">Sign up</a>
-//                   </p> */}
-//                 </div>
+  const handleSendOtp = async () => {
+    if (!email) {
+      methods.setError("email", { type: "manual", message: "Email is required" })
+      return
+    }
+    await onGenerateOtp(email, setStep)
+  }
 
-//                 <FieldGroup className="p-5 px-10">
-//                   <Field>
-//                     <FormField
-//                       control={methods.control}
-//                       name="phone"
-//                       render={({ field }) => (
-//                         <FormItem>
-//                           <FormLabel>Phone</FormLabel>
-//                           <FormControl>
-//                             <Input
-//                               className="rounded-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-//                               id="phone"
-//                               type="number"
-//                               placeholder="Enter your phone"
-//                               disabled={loading}
-//                               {...field}
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 4) {
+      methods.setError("otp", { type: "manual", message: "OTP must be 4 digits" })
+      return
+    }
+    await onVerify(email, otp, setStep)
+  }
 
+  return (
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Form {...methods}>
+        <form onSubmit={onHandleSubmit}>
+          <FieldGroup>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <a href="#" className="flex flex-col items-center gap-2 font-medium">
+                <div className="flex items-center justify-center rounded-md">
+                  <LOGO />
+                </div>
+                <span className="sr-only">{trivlloData.company_name} Vendor</span>
+              </a>
+              <h1 className="text-xl font-bold">Reset Password</h1>
+              <FieldDescription>
+                {step === 1 && "Enter your email to receive a password reset code."}
+                {step === 2 && "Enter the 4-digit code sent to your email."}
+                {step === 3 && "Enter your new password."}
+              </FieldDescription>
+            </div>
 
-//                             />
-//                           </FormControl>
-//                           <FormMessage />
-//                         </FormItem>
-//                       )}
-//                     />
-//                   </Field>
+            {step === 1 && (
+              <Field>
+                <FormField
+                  control={methods.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          disabled={loading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Field>
+            )}
 
-//                   <Field>
-//                     <ForgetPasswordHandeler
-//                       currentStep={currentStep}
-//                       setCurrentStep={setCurrentStep}
-//                     />
-//                   </Field>
-//                   {/* <FieldSeparator>Or</FieldSeparator>
-//                   <Field className="grid gap-2 sm:grid-cols-1 md:px-10">
-//                     {ConnectWithMedia.map((item, i) => (
-//                       <Button
-//                         variant="outline"
-//                         type="button"
-//                         key={i}
-//                         onClick={() => {
-//                           window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/v1${item.url}`;
-//                         }}
-//                       >
-//                         {item.icon}
-//                         Continue with {item.title}
-//                       </Button>
-//                     ))}
-//                   </Field> */}
-//                 </FieldGroup>
-//                 {/* <div className="flex flex-col items-center gap-2 text-center  md:hidden">
-//                   <FieldDescription>
-//                     Already have an account? <a href="/login" className="text-primary font-bold cursor-pointer">Back to Login</a>
-//                   </FieldDescription>
-//                 </div> */}
-//                 <div className="flex flex-col items-center gap-2 text-center   font-bold text-primary">
-//                   <FieldDescription>
-//                     Already have an account? <span onClick={() => setTag("Log-in")} className="text-primary font-bold cursor-pointer">Back to Login</span>
-//                   </FieldDescription>
-//                 </div>
-//                 <br />
+            {step === 2 && (
+              <Field className="flex flex-col items-center gap-4">
+                <FormField
+                  control={methods.control}
+                  name="otp"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col items-center">
+                      <FormLabel className="text-center">Verification Code</FormLabel>
+                      <FormControl>
+                        <InputOTP
+                          maxLength={4}
+                          pattern={REGEXP_ONLY_DIGITS}
+                          disabled={loading}
+                          value={field.value}
+                          onChange={field.onChange}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Field>
+            )}
 
-//                 <FieldDescription className="px-6 text-center">
-//                   By clicking continue, you agree to our{" "}
-//                   <a href="#">Terms of Service</a> and{" "}
-//                   <a href="#">Privacy Policy</a>.
-//                 </FieldDescription>
+            {step === 3 && (
+              <>
+                <Field>
+                  <FormField
+                    control={methods.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <div className="relative flex items-center">
+                            <Input
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              placeholder="New password"
+                              disabled={loading}
+                              className="pr-10"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              disabled={loading}
+                              className="absolute right-3 flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none disabled:opacity-50"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </Field>
 
-//               </div>
-//             )}
+                <Field>
+                  <FormField
+                    control={methods.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative flex items-center">
+                            <Input
+                              id="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="Confirm new password"
+                              disabled={loading}
+                              className="pr-10"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              disabled={loading}
+                              className="absolute right-3 flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none disabled:opacity-50"
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </Field>
+              </>
+            )}
 
-//             {currentStep === 2 && (
-//               <div className="w-full flex justify-center">
-//               <ForgotPasswordOTPForm className="bg-transparent w-full" methods={methods} onOTP={onOTP} setOnOTP={setOnOTP} />
-//               </div>
-              
-//             )}
-//             {
-//               currentStep == 3 && (
-//                 <div className="flex flex-col gap-3 justify-center m-10">
-//                   <Field>
-//                     <FormField
-//                       control={methods.control}
-//                       name="password"
-//                       render={({ field }) => (
-//                         <FormItem>
-//                           <FormLabel>Password</FormLabel>
-//                           <FormControl>
-//                             <div className="relative">
-//                               <Input
-//                                 className="rounded-full pr-12" // pr-12 gives space so text doesn't go under the icon
-//                                 id="password"
-//                                 type={showPassword ? "text" : "password"}
-//                                 placeholder="Enter your password"
-//                                 disabled={loading}
-//                                 {...field}
-//                               />
-//                               <button
-//                                 type="button"
-//                                 onClick={() => setShowPassword(!showPassword)}
-//                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-//                               >
-//                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-//                               </button>
-//                             </div>
-//                           </FormControl>
-//                           <FormMessage />
-//                         </FormItem>
-//                       )}
-//                     />
-//                   </Field>
+            <Field className="mt-2">
+              {step === 1 && (
+                <Button type="button" onClick={handleSendOtp} disabled={loading} className="w-full">
+                  {loading ? "Sending..." : "Send Verification Code"}
+                </Button>
+              )}
+              {step === 2 && (
+                <Button type="button" onClick={handleVerifyOtp} disabled={loading} className="w-full">
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </Button>
+              )}
+              {step === 3 && (
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "Resetting..." : "Reset Password"}
+                </Button>
+              )}
+            </Field>
 
-//                   <Field>
-//                     <FormField
-//                       control={methods.control}
-//                       name="confirmPassword"
-//                       render={({ field }) => (
-//                         <FormItem>
-//                           <FormLabel>Confirm Password</FormLabel>
-//                           <FormControl>
-//                             <div className="relative">
-//                               <Input
-//                                 className="rounded-full pr-12"
-//                                 id="confirmPassword"
-//                                 type={showConfirmPassword ? "text" : "password"}
-//                                 placeholder="Confirm Password"
-//                                 disabled={loading}
-//                                 {...field}
-//                               />
-//                               <button
-//                                 type="button"
-//                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-//                               >
-//                                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-//                               </button>
-//                             </div>
-//                           </FormControl>
-//                           <FormMessage />
-//                         </FormItem>
-//                       )}
-//                     />
-//                   </Field>
-
-//                   <Field>
-//                     <ForgetPasswordHandeler
-//                       currentStep={currentStep}
-//                       setCurrentStep={setCurrentStep}
-//                     />
-//                   </Field>
-//                 </div>
-
-//               )
-//             }
-//           </div>
-//         </Loader>
-//       </form>
-//     </Form>
-//   );
-// }
+            <div className="text-center mt-2">
+              <a href="/login" className="text-xs font-semibold text-primary hover:underline">
+                Back to Login
+              </a>
+            </div>
+          </FieldGroup>
+        </form>
+      </Form>
+    </div>
+  )
+}

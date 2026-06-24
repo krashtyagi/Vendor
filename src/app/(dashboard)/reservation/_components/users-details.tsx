@@ -67,9 +67,9 @@ export default function DashboardPage({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <BookingHistoryTable />
-      </div>
+      </div> */}
     </div>
   )
 }

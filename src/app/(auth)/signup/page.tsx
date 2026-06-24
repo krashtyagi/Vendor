@@ -19,6 +19,7 @@ import LOGO from "@/components/logo/logo";
 import { OTPForm } from "./_components/otpForm";
 import { useSignUp } from "./hooks/use-signup";
 import React from "react";
+import trivlloData from "@/../trivllo.json";
 import { Form } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { SignUpProps } from "@/schema/auth";
@@ -30,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ButtonHandler from "./_components/buttonHandler";
+import { Step1Skeleton, OtpSkeleton } from "./_components/skeletons";
 export default function SignupPage() {
   const { currentStep } = useAuthContext();
 
@@ -52,9 +54,12 @@ export default function SignupPage() {
 
 function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
   const { currentStep, setCurrentStep } = useAuthContext();
-  const { loading, methods, onHandleSubmit } = useSignUp();
+  const { loading, methods, onHandleSubmit, onGenerateOtp, veryOtp } = useSignUp();
   if (loading) {
-    return <PageSkeleton />;
+    if (currentStep === 2) {
+      return <Step1Skeleton />;
+    }
+    return <OtpSkeleton />;
   }
 
   return (
@@ -67,13 +72,16 @@ function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
               currentStep={currentStep}
               methods={methods}
               setCurrentStep={setCurrentStep}
+              loading={loading}
+              onGenerateOtp={onGenerateOtp}
+              veryOtp={veryOtp}
             />
           </div>
         </form>
       </Form>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</a>{" "}
-        and <a href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
+        and <a href="#">Privacy Policy</a>.
       </FieldDescription>
     </div>
   );
@@ -103,8 +111,8 @@ const SignupOtp = ({
           <div className="flex items-center justify-center rounded-md">
             <LOGO />
           </div>
-          <span className="sr-only">trivllo Vendor</span>
-          <h1 className="text-2xl font-bold">Welcome to trivllo Vendor</h1>
+          <span className="sr-only">{trivlloData.company_name} Vendor</span>
+          <h1 className="text-2xl font-bold">Welcome to {trivlloData.company_name} Vendor</h1>
         </a>
         <FieldDescription>
           Already have an account?{" "}
