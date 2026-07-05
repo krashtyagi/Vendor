@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { hotelFeatures } from "@/components/icons";
@@ -50,6 +50,16 @@ function MapUpdater({ center }: { center: [number, number] }) {
     return null;
 }
 
+// SUB-COMPONENT: Handles clicking on the map to set location
+function MapClickHandler({ onChange }: { onChange: (coords: [number, number]) => void }) {
+    useMapEvents({
+        click(e) {
+            onChange([e.latlng.lat, e.latlng.lng]);
+        },
+    });
+    return null;
+}
+
 interface LocationPickerProps {
     value: [number, number]; // [lat, lng]
     onChange: (coords: [number, number]) => void;
@@ -71,6 +81,7 @@ const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
 
                 {/* This component triggers the animation whenever 'value' changes */}
                 <MapUpdater center={value} />
+                <MapClickHandler onChange={onChange} />
 
                 <Marker
                     position={value}
