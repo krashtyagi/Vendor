@@ -168,7 +168,18 @@ const ProcessButtonHandler = ({
                                         "amenities"
                                     ]);
                                     if (!isValid) {
-                                        toast.error("Please fill in all details. Make sure at least 5 images are uploaded.");
+                                        const errors = methods.formState.errors;
+                                        let errorMessage = "Please fill in all required details correctly.";
+                                        
+                                        if (errors.name?.message) errorMessage = `Name: ${errors.name.message}`;
+                                        else if (errors.description?.message) errorMessage = `Description: ${errors.description.message}`;
+                                        else if (errors.hotelAddress?.message) errorMessage = `Address: ${errors.hotelAddress.message}`;
+                                        else if (errors.hotelCity?.message) errorMessage = `City: ${errors.hotelCity.message}`;
+                                        else if (errors.images?.message) errorMessage = `Gallery: ${errors.images.message}`;
+                                        else if (errors.documents?.message) errorMessage = `Documents: ${errors.documents.message}`;
+                                        else if (errors.amenities?.message) errorMessage = `Amenities: ${errors.amenities.message}`;
+
+                                        toast.error(errorMessage);
                                         return;
                                     }
                                     submitStep_3(
