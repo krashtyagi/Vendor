@@ -9,7 +9,7 @@ import trivlloData from '@/../trivllo.json'
 
 export default function AdvertisementsPage() {
     const handleAdPlanSelection = (planName: string, price: string, duration: string) => {
-        const email = process.env.NEXT_PUBLIC_EMAIL_TO || 'example@gmail.com'
+        const email = process.env.NEXT_PUBLIC_EMAIL_TO || trivlloData.contact.email || 'example@gmail.com'
         const subject = `[Ad Inquiry] Request to Advertise on ${trivlloData.company_name} - ${planName} Plan`
 
         const body = `Dear ${trivlloData.company_name} Advertising Team,

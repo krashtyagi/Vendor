@@ -156,7 +156,10 @@ const AddTourForm = ({
                         </div>
                       ))}
                       <label className={`h-28 w-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-all ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}>
-                        <Input type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} disabled={uploading} />
+                        <Input type="file"
+                          multiple
+                          // accept="image/jpeg,image/png,image/webp"
+                          className="hidden" onChange={handleImageChange} disabled={uploading} />
                         {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <><Plus size={28} className="text-muted-foreground" /><span className="mt-2 text-sm font-medium text-muted-foreground">Add Images</span></>}
                       </label>
                     </div>
