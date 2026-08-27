@@ -34,6 +34,18 @@ export default function Page() {
 }
 
 
+const extractFormErrors = (errObj: any, prefix = ""): string[] => {
+  if (!errObj || typeof errObj !== "object") return [];
+  if ("message" in errObj && typeof errObj.message === "string" && errObj.message) {
+    return [prefix ? `${prefix}: ${errObj.message}` : errObj.message];
+  }
+  return Object.entries(errObj).flatMap(([key, val]) => {
+    const formattedKey = !isNaN(Number(key)) ? `Day ${Number(key) + 1}` : key;
+    const newPrefix = prefix ? `${prefix} -> ${formattedKey}` : formattedKey;
+    return extractFormErrors(val, newPrefix);
+  });
+};
+
 const AddTourForm = ({
   setEditMode,
 }: {
@@ -44,12 +56,25 @@ const AddTourForm = ({
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
   const { data } = useCurrentUser();
+
+  const tourCompanyId =
+    data?.data?.approvedData?.tourId ||
+    data?.data?.approvedData?.companyId ||
+    data?.data?.serviceDetails?.id ||
+    data?.data?.serviceDetails?._id ||
+    "";
+
   const form = useForm<NewTourProps>({
     resolver: zodResolver(NewTourSchema),
     defaultValues: {
-      tourId: data?.data?.serviceDetails?.id,
-      title: "", destinations: [""], duration: { days: 1, nights: 0 },
-      basePrice: 1000, discountPrice: 0, description: "", features: [""],
+      tourId: tourCompanyId ? String(tourCompanyId) : "",
+      title: "",
+      destinations: [""],
+      duration: { days: 1, nights: 0 },
+      basePrice: 1000,
+      discountPrice: 0,
+      description: "",
+      features: [""],
       images: [],
       itinerary: [{ day: 1, title: "", description: "", highlights: [""] }],
       meta: { hotelType: "", transport: "", mealPlan: "" },
@@ -65,12 +90,20 @@ const AddTourForm = ({
   const { fields: itinFields, append: appendItin, remove: removeItin } =
     useFieldArray({ control: form.control, name: "itinerary" });
 
-  useEffect(() => { return () => { previews.forEach((url) => URL.revokeObjectURL(url)); }; }, [previews]);
+  useEffect(() => {
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
 
   useEffect(() => {
-    const id = data?.data?.approvedData?.tourId || data?.data?.serviceDetails?.id;
+    const id =
+      data?.data?.approvedData?.tourId ||
+      data?.data?.approvedData?.companyId ||
+      data?.data?.serviceDetails?.id ||
+      data?.data?.serviceDetails?._id;
     if (id) {
-      form.setValue("tourId", id);
+      form.setValue("tourId", String(id), { shouldValidate: true });
     }
   }, [data, form]);
 
@@ -87,8 +120,13 @@ const AddTourForm = ({
         if (result?.url && result?.public_id && result?.resource_type) {
           newUrls.push({ url: result.url, public_id: result.public_id, resource_type: result.resource_type });
           toast.success(`Uploaded: ${file.name}`);
-        } else { throw new Error("Incomplete upload data received"); }
-      } catch (err) { console.error("Upload failed:", file.name, err); toast.error(`Failed to upload ${file.name}`); }
+        } else {
+          throw new Error("Incomplete upload data received");
+        }
+      } catch (err) {
+        console.error("Upload failed:", file.name, err);
+        toast.error(`Failed to upload ${file.name}`);
+      }
     }
     const current = form.getValues("images") || [];
     form.setValue("images", [...current, ...newUrls], { shouldValidate: true, shouldDirty: true });
@@ -97,21 +135,45 @@ const AddTourForm = ({
   };
 
   const removeImage = (index: number) => {
-    setPreviews((prev) => { URL.revokeObjectURL(prev[index]); return prev.filter((_, i) => i !== index); });
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
     const current = form.getValues("images") || [];
     form.setValue("images", current.filter((_, i) => i !== index), { shouldValidate: true });
   };
+
   const router = useRouter();
-  const onSubmit = async (data: NewTourProps) => {
+
+  const onSubmit = async (formData: NewTourProps) => {
     setLoading(true);
     try {
-      await addTourService(data);
+      const activeTourId =
+        formData.tourId ||
+        data?.data?.approvedData?.tourId ||
+        data?.data?.approvedData?.companyId ||
+        data?.data?.serviceDetails?.id ||
+        data?.data?.serviceDetails?._id;
+
+      if (!activeTourId) {
+        toast.error("Tour Company ID not found. Please make sure your tour vendor registration is approved.");
+        setLoading(false);
+        return;
+      }
+
+      await addTourService({
+        ...formData,
+        tourId: String(activeTourId),
+      });
       toast.success("Tour created successfully!");
-      form.reset(); setPreviews([]);
-    } catch (err: any) { console.error(err); toast.error("Failed to create tour"); }
-    finally {
-      setLoading(false);
+      form.reset();
+      setPreviews([]);
       router.push("/tours");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to create tour");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,14 +181,10 @@ const AddTourForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          const errorMsg = Object.entries(errors)
-            .map(([key, err]) => {
-              if (err && typeof err === 'object' && 'message' in err) {
-                return `${key}: ${err.message}`;
-              }
-              return `${key}: Invalid value`;
-            })
-            .join(", ");
+          console.error("Validation errors:", errors);
+          const errorMessages = extractFormErrors(errors);
+          const errorMsg =
+            errorMessages.length > 0 ? errorMessages.join(", ") : "Please check all required fields.";
           toast.error(`Form validation failed: ${errorMsg}`);
         })}
         className="space-y-6 pb-12"

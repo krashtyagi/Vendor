@@ -5,7 +5,7 @@ export const NewTourSchema = z
     tourId: z.string().min(1, "Tour ID is required"),
     title: z.string().min(1, "Title is required"),
     destinations: z
-      .array(z.string())
+      .array(z.string().min(1, "Destination cannot be empty"))
       .min(1, "At least one destination is required"),
     duration: z.object({
       days: z.number().min(1, "Days is required"),
@@ -14,7 +14,9 @@ export const NewTourSchema = z
     basePrice: z.number().min(1, "Base price is required"),
     discountPrice: z.number().min(0, "Discount price is required"),
     description: z.string().min(1, "Description is required"),
-    features: z.array(z.string()).min(1, "At least one feature is required"),
+    features: z
+      .array(z.string().min(1, "Feature cannot be empty"))
+      .min(1, "At least one feature is required"),
     images: z.array(
       z.object({
         url: z.string(),
@@ -29,7 +31,7 @@ export const NewTourSchema = z
           title: z.string().min(1, "Day title is required"),
           description: z.string().min(1, "Day description is required"),
           highlights: z
-            .array(z.string())
+            .array(z.string().min(1, "Highlight cannot be empty"))
             .min(1, "At least one highlight is required"),
         }),
       )
