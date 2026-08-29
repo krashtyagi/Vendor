@@ -38,7 +38,7 @@ const SERVICE_TABS: { key: ServiceType; label: string; icon: React.ReactNode; de
   { key: "package", label: "trekking", icon: <Mountain className="h-5 w-5" />, desc: "Package based" },
 ];
 function useImageUpload(form: any) {
-  const { uploadFile } = useAuthStore();
+  const { uploadFile, deleteFile } = useAuthStore();
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
 
@@ -66,9 +66,16 @@ function useImageUpload(form: any) {
   };
 
   const removeImage = (index: number) => {
-    setPreviews((prev) => { URL.revokeObjectURL(prev[index]); return prev.filter((_, i) => i !== index); });
     const current = form.getValues("images") || [];
-    form.setValue("images", current.filter((_: any, i: number) => i !== index), { shouldValidate: true });
+    const target = current[index];
+    if (target?.public_id) {
+      deleteFile(target.public_id, target.resource_type || "image").catch((err) => {
+        console.error("Failed to delete adventure image from Cloudinary:", err);
+      });
+    }
+
+    setPreviews((prev) => { URL.revokeObjectURL(prev[index]); return prev.filter((_, i) => i !== index); });
+    form.setValue("images", current.filter((_: any, i: number) => i !== index), { shouldValidate: true, shouldDirty: true });
   };
 
   return { uploading, previews, setPreviews, handleImageChange, removeImage };

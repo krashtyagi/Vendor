@@ -143,6 +143,10 @@ export const Step_1 = ({
                 : [...docs, { docName: data.name, docUrl: data.url }];
               setValue("verificationDocs", updatedDocs, { shouldValidate: true });
             }}
+            onRemove={() => {
+              const docs = watch("verificationDocs") || [];
+              setValue("verificationDocs", docs.filter((d: any) => d.docName !== "panCard"), { shouldValidate: true });
+            }}
           />
           <ImageField
             label="Aadhaar Front Side"
@@ -153,6 +157,10 @@ export const Step_1 = ({
                 ? docs.map((d: any) => d.docName === data.name ? { ...d, docUrl: data.url } : d)
                 : [...docs, { docName: data.name, docUrl: data.url }];
               setValue("verificationDocs", updatedDocs, { shouldValidate: true });
+            }}
+            onRemove={() => {
+              const docs = watch("verificationDocs") || [];
+              setValue("verificationDocs", docs.filter((d: any) => d.docName !== "aadhaarFront"), { shouldValidate: true });
             }}
           />
         </div>

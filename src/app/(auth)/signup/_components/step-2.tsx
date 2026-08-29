@@ -290,6 +290,13 @@ export const Step_2 = ({
                 resource_type: data.resource_type
               }, { shouldValidate: true });
             }}
+            onRemove={() => {
+              setValue("bankProof", {
+                url: "",
+                public_id: "",
+                resource_type: "image"
+              }, { shouldValidate: true });
+            }}
           />
         </div>
       </div>

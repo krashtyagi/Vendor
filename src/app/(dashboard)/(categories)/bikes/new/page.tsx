@@ -46,7 +46,7 @@ const AddBikeForm = ({ setEditMode, }: {
     React.SetStateAction<{ id: string; mode: boolean }>
   >;
 }) => {
-  const { uploadFile } = useAuthStore();
+  const { uploadFile, deleteFile } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -134,16 +134,23 @@ const AddBikeForm = ({ setEditMode, }: {
   };
 
   const removeImage = (index: number) => {
+    const current = form.getValues("images") || [];
+    const target = current[index];
+    if (target?.public_id) {
+      deleteFile(target.public_id, target.resource_type || "image").catch((err) => {
+        console.error("Failed to delete bike image from Cloudinary:", err);
+      });
+    }
+
     setPreviews((prev) => {
       URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
 
-    const current = form.getValues("images") || [];
     form.setValue(
       "images",
       current.filter((_, i) => i !== index),
-      { shouldValidate: true }
+      { shouldValidate: true, shouldDirty: true }
     );
   };
   const router = useRouter();

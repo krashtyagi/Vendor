@@ -46,7 +46,9 @@ interface AuthStates {
   verifyOTP: (data: { email: string; otp: string }) => Promise<any>;
   resendOTP: (email: string) => Promise<any>;
   updateUser: (data: Partial<User>) => Promise<any>;
-  uploadFile: (file: File) => Promise<any>;
+  uploadFile: (file: File, folder?: string) => Promise<any>;
+  deleteFile: (publicId: string, resourceType?: string) => Promise<any>;
+  deleteMultipleFiles: (publicIds: string[], resourceType?: string) => Promise<any>;
   forgotPassword: (data: {
     email: string;
   }) => Promise<{ success: boolean; message: string }>;
@@ -258,10 +260,10 @@ export const useAuthStore = create<AuthStates>()(
         }
       },
 
-      uploadFile: async (file: File) => {
+      uploadFile: async (file: File, folder: string = "profiles") => {
         const formData = new FormData();
         formData.append("files", file);
-        formData.append("folder", "profiles");
+        formData.append("folder", folder);
         try {
           const res = await axiosApi.post("/uploads", formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -284,6 +286,44 @@ export const useAuthStore = create<AuthStates>()(
           return {
             success: false,
             message: err.response?.data?.message || "Upload failed",
+          };
+        }
+      },
+
+      deleteFile: async (publicId: string, resourceType: string = "image") => {
+        if (!publicId) return { success: true };
+        try {
+          const res = await axiosApi.delete("/uploads", {
+            data: { public_id: publicId, resource_type: resourceType },
+          });
+          return {
+            success: res.data.success,
+            message: res.data.message || "File deleted successfully",
+          };
+        } catch (error) {
+          const err = error as any;
+          return {
+            success: false,
+            message: err.response?.data?.message || "Failed to delete file",
+          };
+        }
+      },
+
+      deleteMultipleFiles: async (publicIds: string[], resourceType: string = "image") => {
+        if (!publicIds || publicIds.length === 0) return { success: true };
+        try {
+          const res = await axiosApi.delete("/uploads", {
+            data: { public_ids: publicIds, resource_type: resourceType },
+          });
+          return {
+            success: res.data.success,
+            message: res.data.message || "Files deleted successfully",
+          };
+        } catch (error) {
+          const err = error as any;
+          return {
+            success: false,
+            message: err.response?.data?.message || "Failed to delete files",
           };
         }
       },

@@ -35,7 +35,7 @@ export default function EditCabForm({
   setEditMode?: React.Dispatch<React.SetStateAction<{ id: string; mode: boolean }>>;
   cabId: string;
 }) {
-  const { uploadFile } = useAuthStore();
+  const { uploadFile, deleteFile } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -118,9 +118,16 @@ export default function EditCabForm({
   };
 
   const removeImage = (index: number) => {
-    setPreviews((prev) => { URL.revokeObjectURL(prev[index]); return prev.filter((_: any, i: number) => i !== index); });
     const current = form.getValues("images") || [];
-    form.setValue("images", current.filter((_: any, i: number) => i !== index), { shouldValidate: true });
+    const target = current[index];
+    if (target?.public_id) {
+      deleteFile(target.public_id, target.resource_type || "image").catch((err) => {
+        console.error("Failed to delete cab image from Cloudinary:", err);
+      });
+    }
+
+    setPreviews((prev) => { URL.revokeObjectURL(prev[index]); return prev.filter((_: any, i: number) => i !== index); });
+    form.setValue("images", current.filter((_: any, i: number) => i !== index), { shouldValidate: true, shouldDirty: true });
   };
 
   const onSubmit = async (data: NewCabProps) => {

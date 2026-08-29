@@ -45,7 +45,7 @@ export default function AddRoomForm({
   hotelId: string;
   roomId: string;
 }) {
-  const { uploadFile } = useAuthStore();
+  const { uploadFile, deleteFile } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]); // local blob URLs (temporary)
@@ -125,6 +125,14 @@ export default function AddRoomForm({
   };
 
   const removeImage = (index: number) => {
+    const current = form.getValues("images") || [];
+    const target = current[index];
+    if (target?.public_id) {
+      deleteFile(target.public_id, target.resource_type || "image").catch((err) => {
+        console.error("Failed to delete room image from Cloudinary:", err);
+      });
+    }
+
     // Remove preview
     setPreviews((prev) => {
       URL.revokeObjectURL(prev[index]);
@@ -132,7 +140,6 @@ export default function AddRoomForm({
     });
 
     // Remove from form values (secure URLs)
-    const current = form.getValues("images") || [];
     form.setValue(
       "images",
       current.filter((_, i) => i !== index),

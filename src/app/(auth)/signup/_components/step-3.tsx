@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import ImageField from "./image-input";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthStore } from "@/stores/auth.store";
 
 
 
@@ -103,6 +104,15 @@ const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
 export const amenityKeys = Object.keys(hotelFeatures) as (keyof typeof hotelFeatures)[];
 
 export const CompanyLogoField = ({ logo, setValue }: { logo: any; setValue: any }) => {
+    const handleRemoveLogo = () => {
+        if (logo?.public_id) {
+            useAuthStore.getState().deleteFile(logo.public_id, logo.resource_type || "image").catch((err) => {
+                console.error("Failed to delete company logo from Cloudinary:", err);
+            });
+        }
+        setValue("logo", undefined, { shouldValidate: true });
+    };
+
     return (
         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
@@ -121,9 +131,9 @@ export const CompanyLogoField = ({ logo, setValue }: { logo: any; setValue: any 
                         <img src={logo.url} alt="Company Logo" className="w-full h-full object-cover" />
                         <button
                             type="button"
-                            onClick={() => setValue("logo", undefined, { shouldValidate: true })}
+                            onClick={handleRemoveLogo}
                             className="absolute top-1 right-1 p-1 bg-destructive text-white rounded-full shadow-lg hover:bg-red-600 transition-all"
-                            title="Remove logo"
+                            title="Remove and delete logo"
                         >
                             <X className="w-3 h-3" />
                         </button>
@@ -290,7 +300,13 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button
                                 type="button"
-                                onClick={() => setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true })}
+                                onClick={() => {
+                                    const target = images[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "image").catch(console.error);
+                                    }
+                                    setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-all duration-200 hover:bg-red-600"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -328,26 +344,29 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                             control={control}
                             name="amenities"
                             render={({ field }) => (
-                                <label className={cn(
-                                    "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none",
-                                    field.value?.includes(id)
-                                        ? "bg-primary/10 border-primary/40 text-primary"
-                                        : "bg-white/[0.02] border-white/5 text-slate-400 hover:bg-white/[0.05]"
-                                )}>
-                                    <Checkbox
-                                        className="hidden"
-                                        checked={field.value?.includes(id)}
-                                        onCheckedChange={(checked) => {
-                                            const arr = field.value || [];
-                                            field.onChange(checked ? [...arr, id] : arr.filter((v) => v !== id));
-                                        }}
-                                    />
-                                    <span className="text-xs font-medium capitalize">{id.replace("_", " ")}</span>
-                                </label>
+                                <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border border-white/5 p-4 hover:border-white/10 hover:bg-white/[0.01] transition-colors">
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value?.includes(id)}
+                                            onCheckedChange={(checked) => {
+                                                const current = field.value || [];
+                                                return checked
+                                                    ? field.onChange([...current, id])
+                                                    : field.onChange(current.filter((val: string) => val !== id));
+                                            }}
+                                        />
+                                    </FormControl>
+                                    <FormLabel className="text-xs font-normal text-slate-300 capitalize cursor-pointer">
+                                        {id.replace(/_/g, " ")}
+                                    </FormLabel>
+                                </FormItem>
                             )}
                         />
                     ))}
                 </div>
+                {errors.amenities && (
+                    <p className="text-xs text-destructive font-medium">{errors.amenities.message}</p>
+                )}
             </div>
 
             {/* Documents */}
@@ -368,7 +387,13 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setValue("documents", documents.filter((_, i) => i !== index))}
+                                onClick={() => {
+                                    const target = documents[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "raw").catch(console.error);
+                                    }
+                                    setValue("documents", documents.filter((_, i) => i !== index));
+                                }}
                                 className="p-2 hover:text-destructive transition-colors"
                             >
                                 <X className="w-4 h-4" />
@@ -526,7 +551,13 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button
                                 type="button"
-                                onClick={() => setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true })}
+                                onClick={() => {
+                                    const target = images[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "image").catch(console.error);
+                                    }
+                                    setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-all duration-200 hover:bg-red-600"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -604,7 +635,13 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setValue("documents", documents.filter((_, i) => i !== index))}
+                                onClick={() => {
+                                    const target = documents[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "raw").catch(console.error);
+                                    }
+                                    setValue("documents", documents.filter((_, i) => i !== index));
+                                }}
                                 className="p-2 hover:text-destructive transition-colors"
                             >
                                 <X className="w-4 h-4" />
@@ -762,7 +799,13 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button
                                 type="button"
-                                onClick={() => setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true })}
+                                onClick={() => {
+                                    const target = images[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "image").catch(console.error);
+                                    }
+                                    setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-all duration-200 hover:bg-red-600"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -840,7 +883,13 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setValue("documents", documents.filter((_, i) => i !== index))}
+                                onClick={() => {
+                                    const target = documents[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "raw").catch(console.error);
+                                    }
+                                    setValue("documents", documents.filter((_, i) => i !== index));
+                                }}
                                 className="p-2 hover:text-destructive transition-colors"
                             >
                                 <X className="w-4 h-4" />
@@ -998,7 +1047,13 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button
                                 type="button"
-                                onClick={() => setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true })}
+                                onClick={() => {
+                                    const target = images[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "image").catch(console.error);
+                                    }
+                                    setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-all duration-200 hover:bg-red-600"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -1076,7 +1131,13 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setValue("documents", documents.filter((_, i) => i !== index))}
+                                onClick={() => {
+                                    const target = documents[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "raw").catch(console.error);
+                                    }
+                                    setValue("documents", documents.filter((_, i) => i !== index));
+                                }}
                                 className="p-2 hover:text-destructive transition-colors"
                             >
                                 <X className="w-4 h-4" />
@@ -1256,7 +1317,13 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button
                                 type="button"
-                                onClick={() => setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true })}
+                                onClick={() => {
+                                    const target = images[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "image").catch(console.error);
+                                    }
+                                    setValue("images", images.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-all duration-200 hover:bg-red-600"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -1334,7 +1401,13 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setValue("documents", documents.filter((_, i) => i !== index))}
+                                onClick={() => {
+                                    const target = documents[index];
+                                    if (target?.public_id) {
+                                        useAuthStore.getState().deleteFile(target.public_id, target.resource_type || "raw").catch(console.error);
+                                    }
+                                    setValue("documents", documents.filter((_, i) => i !== index));
+                                }}
                                 className="p-2 hover:text-destructive transition-colors"
                             >
                                 <X className="w-4 h-4" />
