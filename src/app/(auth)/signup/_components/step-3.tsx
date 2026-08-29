@@ -102,10 +102,51 @@ const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
 
 export const amenityKeys = Object.keys(hotelFeatures) as (keyof typeof hotelFeatures)[];
 
+export const CompanyLogoField = ({ logo, setValue }: { logo: any; setValue: any }) => {
+    return (
+        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    <FieldLabel className="text-slate-200 font-semibold text-sm">Company Logo / Profile Image</FieldLabel>
+                    <span className="text-[10px] text-muted-foreground bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5 font-medium">Optional</span>
+                </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Upload your company or brand logo. You can also add or update this anytime later from your dashboard profile avatar.
+            </p>
+            <div className="flex items-center gap-4 pt-1">
+                {logo?.url ? (
+                    <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-primary/40 group bg-white/[0.04] shadow-md">
+                        <img src={logo.url} alt="Company Logo" className="w-full h-full object-cover" />
+                        <button
+                            type="button"
+                            onClick={() => setValue("logo", undefined, { shouldValidate: true })}
+                            className="absolute top-1 right-1 p-1 bg-destructive text-white rounded-full shadow-lg hover:bg-red-600 transition-all"
+                            title="Remove logo"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                ) : (
+                    <div className="w-48">
+                        <ImageField
+                            label="Upload Logo / PFP"
+                            docName="companyLogo"
+                            onUploadSuccess={(data) => setValue("logo", { url: data.url, public_id: data.public_id, resource_type: data.resource_type }, { shouldValidate: true })}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFormReturn<SignUpProps> }) => {
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
     const location = watch("location") || { type: "Point", coordinates: [72.8777, 19.0760] };
@@ -165,6 +206,8 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
 
     return (
         <FieldGroup className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Optional Company Logo */}
+            <CompanyLogoField logo={logo} setValue={setValue} />
 
             {/* Property Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -353,6 +396,7 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
     const location = watch("location") || { type: "Point", coordinates: [72.8777, 19.0760] };
@@ -398,6 +442,9 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
 
     return (
         <FieldGroup className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Optional Company Logo */}
+            <CompanyLogoField logo={logo} setValue={setValue} />
+
             {/* Cab Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Field className="md:col-span-2">
@@ -585,6 +632,7 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
     const location = watch("location") || { type: "Point", coordinates: [72.8777, 19.0760] };
@@ -630,6 +678,9 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
 
     return (
         <FieldGroup className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Optional Company Logo */}
+            <CompanyLogoField logo={logo} setValue={setValue} />
+
             {/* Bike Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Field className="md:col-span-2">
@@ -817,6 +868,7 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
     const location = watch("location") || { type: "Point", coordinates: [72.8777, 19.0760] };
@@ -862,6 +914,9 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
 
     return (
         <FieldGroup className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Optional Company Logo */}
+            <CompanyLogoField logo={logo} setValue={setValue} />
+
             {/* Tour Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Field className="md:col-span-2">
@@ -1049,6 +1104,7 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
     const location = watch("location") || { type: "Point", coordinates: [72.8777, 19.0760] };
@@ -1095,6 +1151,9 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
 
     return (
         <FieldGroup className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Optional Company Logo */}
+            <CompanyLogoField logo={logo} setValue={setValue} />
+
             {/* Adventure Center Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Field className="md:col-span-1">

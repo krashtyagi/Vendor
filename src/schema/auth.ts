@@ -108,12 +108,13 @@ export const SignUpSchema = z
       .or(z.string().regex(/^[\w.-]+@[\w.-]+$/)), // Handles standard user@bank format
     bankProof: bankProofSchema,
 
-    //step-3 hotel
+    //step-3 hotel & services
     name: z.string().min(3, "Hotel name must be at least 3 characters"),
     description: z.string().min(10, "Description should be more detailed"),
     hotelAddress: z.string().min(1, "Address is required"),
     hotelCity: z.string().min(1, "City is required"),
     location: locationSchema,
+    logo: mediaSchema.optional(),
     images: z.array(mediaSchema).min(5, "At least 5 images are required"),
     documents: z
       .array(documentSchema)

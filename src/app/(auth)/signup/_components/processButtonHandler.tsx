@@ -193,7 +193,10 @@ const ProcessButtonHandler = ({
                                         getValues("hotelCity"),
                                         getValues("location"),
                                         setCurrentStep,
-                                        { adventureCategory: getValues("adventureCategory") }
+                                        {
+                                            adventureCategory: getValues("adventureCategory"),
+                                            logo: getValues("logo"),
+                                        }
                                     );
                                 },
                             })}

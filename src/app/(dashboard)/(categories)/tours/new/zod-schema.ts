@@ -14,9 +14,9 @@ export const NewTourSchema = z
     basePrice: z.number().min(1, "Base price is required"),
     discountPrice: z.number().min(0, "Discount price is required"),
     description: z.string().min(1, "Description is required"),
-    features: z
-      .array(z.string().min(1, "Feature cannot be empty"))
-      .min(1, "At least one feature is required"),
+    features: z.array(z.string()),
+    tourType: z.array(z.string()),
+    amenities: z.array(z.string()),
     images: z.array(
       z.object({
         url: z.string(),

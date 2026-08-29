@@ -141,11 +141,21 @@ export const useSignUp = () => {
     city: string,
     location: { type: string; coordinates: [number, number] },
     onNext: React.Dispatch<React.SetStateAction<number>>,
-    extraFields?: { adventureCategory?: string }
+    extraFields?: { adventureCategory?: string; logo?: any }
   ) => {
     setLoading(true);
 
     try {
+      // If logo is provided in step 3, update vendor logo
+      if (extraFields?.logo?.url) {
+        try {
+          const { axiosApi } = await import("@/lib/axios");
+          await axiosApi.patch("/vendors/logo", { logo: extraFields.logo });
+        } catch (logoErr) {
+          console.error("Failed to save vendor logo:", logoErr);
+        }
+      }
+
       let res;
       if (serviceType === "cab") {
         res = await SaveCabDetails({

@@ -34,6 +34,7 @@ import {
   CalendarDays,
   Loader2,
   Route,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageSkeleton } from "../../rooms/_components/details.skeleton";
@@ -47,6 +48,15 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Rupee from "@/components/rupee";
 import Image from "next/image";
+import { TourFeatures, TourAmenities } from "@/components/icons";
+
+const formatLabel = (key: string) => {
+  if (!key) return "";
+  return key
+    .split(/[_-]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 export interface TourListItem {
   id: string;
@@ -60,6 +70,9 @@ export interface TourListItem {
   };
   isActive: boolean;
   images: { url: string; public_id: string; resource_type: string }[];
+  tourType?: string[];
+  amenities?: string[];
+  features?: string[];
 }
 
 export function ToursListing() {
@@ -233,6 +246,36 @@ export function ToursListing() {
                             </span>
                           )}
                         </div>
+
+                        {/* Tour Types & Inclusions Badges on Card */}
+                        {((item.tourType && item.tourType.length > 0) ||
+                          (item.amenities && item.amenities.length > 0)) && (
+                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
+                            {item.tourType?.slice(0, 2).map((type, idx) => {
+                              const IconComponent = TourFeatures[type];
+                              return (
+                                <Badge
+                                  key={idx}
+                                  variant="secondary"
+                                  className="text-[10px] font-medium py-0.5 px-2 flex items-center gap-1"
+                                >
+                                  {IconComponent && <IconComponent className="h-3 w-3 text-primary" />}
+                                  <span>{formatLabel(type)}</span>
+                                </Badge>
+                              );
+                            })}
+                            {(item.tourType?.length || 0) > 2 && (
+                              <span className="text-[10px] text-muted-foreground">
+                                +{(item.tourType?.length || 0) - 2} more types
+                              </span>
+                            )}
+                            {item.amenities && item.amenities.length > 0 && (
+                              <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border">
+                                {item.amenities.length} inclusion{item.amenities.length > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="mt-4 pt-3 flex items-center justify-end border-t border-dashed">
@@ -480,19 +523,69 @@ const TourSideBarDetails = ({
           </div>
         </div>
 
-        {/* Features */}
-        {t.features && t.features.length > 0 && (
+        {/* Tour Types / Categories */}
+        {t.tourType && t.tourType.length > 0 && (
           <div className="space-y-2 border-t border-dashed pt-4">
-            <h4 className="font-semibold text-sm">Features</h4>
+            <h4 className="font-semibold text-sm">Tour Categories / Types</h4>
             <div className="flex flex-wrap gap-2">
-              {t.features.map((feature: string, idx: number) => (
-                <Badge key={idx} variant="outline" className="text-[10px]">
-                  {feature}
-                </Badge>
-              ))}
+              {t.tourType.map((type: string, idx: number) => {
+                const IconComponent = TourFeatures[type];
+                return (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium"
+                  >
+                    {IconComponent && <IconComponent className="h-3.5 w-3.5 text-primary" />}
+                    <span>{formatLabel(type)}</span>
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         )}
+
+        {/* Inclusions & Amenities */}
+        {t.amenities && t.amenities.length > 0 && (
+          <div className="space-y-2 border-t border-dashed pt-4">
+            <h4 className="font-semibold text-sm">Inclusions & Amenities</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {t.amenities.map((amenity: string, idx: number) => {
+                const IconComponent = TourAmenities[amenity];
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-xs bg-muted/40 border rounded-lg px-2.5 py-2 font-medium"
+                  >
+                    {IconComponent ? (
+                      <IconComponent className="h-4 w-4 text-primary shrink-0" />
+                    ) : (
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                    )}
+                    <span className="truncate">{formatLabel(amenity)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Custom Features */}
+        {t.features &&
+          t.features.filter((f: string) => f && f.trim().length > 0).length > 0 && (
+            <div className="space-y-2 border-t border-dashed pt-4">
+              <h4 className="font-semibold text-sm">Additional Features</h4>
+              <div className="flex flex-wrap gap-2">
+                {t.features
+                  .filter((f: string) => f && f.trim().length > 0)
+                  .map((feature: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="text-[10px]">
+                      {feature}
+                    </Badge>
+                  ))}
+              </div>
+            </div>
+          )}
 
         {/* Description */}
         {t.description && (

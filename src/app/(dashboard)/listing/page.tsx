@@ -60,7 +60,7 @@ interface VendorData {
         bikeName?: string
         bikeType?: string
         type?: string
-        duration?: string
+        duration?: any
         isActive: boolean
     }>
 }
@@ -143,6 +143,25 @@ function ListingPage() {
             return parts.length > 0 ? parts.join(', ') : 'N/A'
         }
         return `${capacity} guests`
+    }
+
+    const renderDuration = (duration: any) => {
+        if (!duration) return null
+        if (typeof duration === 'object') {
+            const parts = []
+            if (duration.days !== undefined && duration.days !== null) {
+                parts.push(`${duration.days} ${duration.days === 1 ? 'Day' : 'Days'}`)
+            }
+            if (duration.nights !== undefined && duration.nights !== null) {
+                parts.push(`${duration.nights} ${duration.nights === 1 ? 'Night' : 'Nights'}`)
+            }
+            if (duration.hours !== undefined && duration.hours !== null) {
+                parts.push(`${duration.hours} hrs`)
+            }
+            if (parts.length > 0) return parts.join(' / ')
+            return JSON.stringify(duration)
+        }
+        return String(duration)
     }
 
     return (
@@ -272,7 +291,7 @@ function ListingPage() {
                                                 )}
                                                 {item.duration && (
                                                     <p className="text-xs text-zinc-400 mt-0.5">
-                                                        Duration: {item.duration}
+                                                        Duration: {renderDuration(item.duration)}
                                                     </p>
                                                 )}
                                             </div>

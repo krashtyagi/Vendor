@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2, X, Plus, Search, Check } from "lucide-react";
 
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
@@ -26,13 +27,13 @@ import { NewTourProps, NewTourSchema } from "./zod-schema";
 import { addTourService } from "@/services/fetch.service";
 import { useCurrentUser } from "@/services/queryes";
 import { useRouter } from "next/navigation";
+import { TourFeatures, TourAmenities } from "@/components/icons";
 
 export default function Page() {
   return (
     <AddTourForm />
   )
 }
-
 
 const extractFormErrors = (errObj: any, prefix = ""): string[] => {
   if (!errObj || typeof errObj !== "object") return [];
@@ -46,6 +47,13 @@ const extractFormErrors = (errObj: any, prefix = ""): string[] => {
   });
 };
 
+const formatLabel = (key: string) => {
+  return key
+    .split(/[_-]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 const AddTourForm = ({
   setEditMode,
 }: {
@@ -55,6 +63,8 @@ const AddTourForm = ({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [tourTypeSearch, setTourTypeSearch] = useState("");
+  const [amenitySearch, setAmenitySearch] = useState("");
   const { data } = useCurrentUser();
 
   const tourCompanyId =
@@ -74,6 +84,8 @@ const AddTourForm = ({
       basePrice: 1000,
       discountPrice: 0,
       description: "",
+      tourType: [],
+      amenities: [],
       features: [""],
       images: [],
       itinerary: [{ day: 1, title: "", description: "", highlights: [""] }],
@@ -145,6 +157,35 @@ const AddTourForm = ({
 
   const router = useRouter();
 
+  const selectedTourTypes = form.watch("tourType") || [];
+  const selectedAmenities = form.watch("amenities") || [];
+
+  const toggleTourType = (key: string) => {
+    const current = form.getValues("tourType") || [];
+    const updated = current.includes(key)
+      ? current.filter((k) => k !== key)
+      : [...current, key];
+    form.setValue("tourType", updated, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const toggleAmenity = (key: string) => {
+    const current = form.getValues("amenities") || [];
+    const updated = current.includes(key)
+      ? current.filter((k) => k !== key)
+      : [...current, key];
+    form.setValue("amenities", updated, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const filteredTourTypes = Object.entries(TourFeatures).filter(([key]) =>
+    formatLabel(key).toLowerCase().includes(tourTypeSearch.toLowerCase()) ||
+    key.toLowerCase().includes(tourTypeSearch.toLowerCase())
+  );
+
+  const filteredAmenities = Object.entries(TourAmenities).filter(([key]) =>
+    formatLabel(key).toLowerCase().includes(amenitySearch.toLowerCase()) ||
+    key.toLowerCase().includes(amenitySearch.toLowerCase())
+  );
+
   const onSubmit = async (formData: NewTourProps) => {
     setLoading(true);
     try {
@@ -161,9 +202,15 @@ const AddTourForm = ({
         return;
       }
 
+      // Filter out empty strings from array fields
+      const cleanedFeatures = (formData.features || []).filter((f) => f && f.trim().length > 0);
+      const cleanedDestinations = (formData.destinations || []).filter((d) => d && d.trim().length > 0);
+
       await addTourService({
         ...formData,
         tourId: String(activeTourId),
+        features: cleanedFeatures,
+        destinations: cleanedDestinations,
       });
       toast.success("Tour created successfully!");
       form.reset();
@@ -198,7 +245,7 @@ const AddTourForm = ({
           </CardHeader>
 
           <CardContent className="space-y-8 pt-6">
-            <Accordion type="multiple" defaultValue={["images", "basic", "destinations", "itinerary", "features", "meta"]}>
+            <Accordion type="multiple" defaultValue={["images", "basic", "destinations", "tourType", "amenities", "itinerary", "features", "meta"]}>
               {/* ── Images ── */}
               <AccordionItem value="images">
                 <AccordionTrigger>Tour Images</AccordionTrigger>
@@ -216,7 +263,6 @@ const AddTourForm = ({
                       <label className={`h-28 w-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-all ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}>
                         <Input type="file"
                           multiple
-                          // accept="image/jpeg,image/png,image/webp"
                           className="hidden" onChange={handleImageChange} disabled={uploading} />
                         {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <><Plus size={28} className="text-muted-foreground" /><span className="mt-2 text-sm font-medium text-muted-foreground">Add Images</span></>}
                       </label>
@@ -259,6 +305,108 @@ const AddTourForm = ({
                 </AccordionContent>
               </AccordionItem>
 
+              {/* ── Tour Types (Categories/Style) ── */}
+              <AccordionItem value="tourType">
+                <AccordionTrigger>Tour Types ({selectedTourTypes.length} selected)</AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Select the activity types and styles that best describe this tour.</p>
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search tour types..."
+                        value={tourTypeSearch}
+                        onChange={(e) => setTourTypeSearch(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
+                  </div>
+
+                  {selectedTourTypes.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-3 bg-muted/40 rounded-xl border">
+                      <span className="text-xs font-semibold text-muted-foreground mr-1 self-center">Selected:</span>
+                      {selectedTourTypes.map((key) => (
+                        <Badge key={key} variant="secondary" className="gap-1 px-2.5 py-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => toggleTourType(key)}>
+                          {formatLabel(key)}
+                          <X className="h-3 w-3" />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-1 border rounded-xl">
+                    {filteredTourTypes.map(([key, Icon]) => {
+                      const active = selectedTourTypes.includes(key);
+                      return (
+                        <Button
+                          key={key}
+                          type="button"
+                          variant={active ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleTourType(key)}
+                          className="rounded-full flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs transition-all"
+                        >
+                          {Icon && <Icon className="h-3.5 w-3.5" />}
+                          <span>{formatLabel(key)}</span>
+                          {active && <Check className="h-3 w-3 ml-0.5" />}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* ── Inclusions & Amenities ── */}
+              <AccordionItem value="amenities">
+                <AccordionTrigger>Inclusions & Amenities ({selectedAmenities.length} selected)</AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Select what is provided or included in this tour package.</p>
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search amenities..."
+                        value={amenitySearch}
+                        onChange={(e) => setAmenitySearch(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
+                  </div>
+
+                  {selectedAmenities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-3 bg-muted/40 rounded-xl border">
+                      <span className="text-xs font-semibold text-muted-foreground mr-1 self-center">Selected:</span>
+                      {selectedAmenities.map((key) => (
+                        <Badge key={key} variant="secondary" className="gap-1 px-2.5 py-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => toggleAmenity(key)}>
+                          {formatLabel(key)}
+                          <X className="h-3 w-3" />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-1 border rounded-xl">
+                    {filteredAmenities.map(([key, Icon]) => {
+                      const active = selectedAmenities.includes(key);
+                      return (
+                        <Button
+                          key={key}
+                          type="button"
+                          variant={active ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleAmenity(key)}
+                          className="rounded-full flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs transition-all"
+                        >
+                          {Icon && <Icon className="h-3.5 w-3.5" />}
+                          <span>{formatLabel(key)}</span>
+                          {active && <Check className="h-3 w-3 ml-0.5" />}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
               {/* ── Itinerary ── */}
               <AccordionItem value="itinerary">
                 <AccordionTrigger>Itinerary</AccordionTrigger>
@@ -284,17 +432,17 @@ const AddTourForm = ({
                 </AccordionContent>
               </AccordionItem>
 
-              {/* ── Features ── */}
+              {/* ── Custom Features ── */}
               <AccordionItem value="features">
-                <AccordionTrigger>Features</AccordionTrigger>
+                <AccordionTrigger>Custom Highlights & Notes</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">Tour Features</Label>
+                    <Label className="text-base font-semibold">Custom Features</Label>
                     <Button type="button" variant="outline" size="sm" onClick={() => appendFeature("" as any)}>Add Feature</Button>
                   </div>
                   {featureFields.map((field, index) => (
                     <div key={field.id} className="flex gap-4 items-end border-b pb-4">
-                      <FormField control={form.control} name={`features.${index}`} render={({ field }) => (<FormItem className="flex-1"><FormLabel>Feature {index + 1}</FormLabel><FormControl><Input {...field} placeholder="e.g. White Water Rafting, Camping Stay..." /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={form.control} name={`features.${index}`} render={({ field }) => (<FormItem className="flex-1"><FormLabel>Feature {index + 1}</FormLabel><FormControl><Input {...field} placeholder="e.g. Bonfire & Music night, Riverside camp..." /></FormControl><FormMessage /></FormItem>)} />
                       <Button type="button" variant="ghost" size="icon" className="mb-2" onClick={() => removeFeature(index)}><X className="h-4 w-4" /></Button>
                     </div>
                   ))}
