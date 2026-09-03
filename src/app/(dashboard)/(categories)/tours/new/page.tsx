@@ -28,6 +28,7 @@ import { addTourService } from "@/services/fetch.service";
 import { useCurrentUser } from "@/services/queryes";
 import { useRouter } from "next/navigation";
 import { TourFeatures, TourAmenities } from "@/components/icons";
+import { PageSkeleton } from "../../rooms/_components/details.skeleton";
 
 export default function Page() {
   return (
@@ -65,7 +66,7 @@ const AddTourForm = ({
   const [previews, setPreviews] = useState<string[]>([]);
   const [tourTypeSearch, setTourTypeSearch] = useState("");
   const [amenitySearch, setAmenitySearch] = useState("");
-  const { data } = useCurrentUser();
+  const { data, isLoading } = useCurrentUser();
 
   const tourCompanyId =
     data?.data?.approvedData?.tourId ||
@@ -230,6 +231,10 @@ const AddTourForm = ({
       setLoading(false);
     }
   };
+
+  if (isLoading || !tourCompanyId) {
+    return <PageSkeleton />;
+  }
 
   return (
     <Form {...form}>

@@ -50,6 +50,8 @@ import Rupee from "@/components/rupee";
 import Image from "next/image";
 import { TourFeatures, TourAmenities } from "@/components/icons";
 
+import { useCurrentUser } from "@/services/queryes";
+
 const formatLabel = (key: string) => {
   if (!key) return "";
   return key
@@ -81,6 +83,14 @@ export function ToursListing() {
   const [tourSelected, setTourSelected] = React.useState<string | null>(null);
   const router = useRouter();
   const { data: toursResponse, isLoading } = useGetToursServices();
+  const { data: userResponse } = useCurrentUser();
+
+  const tourId =
+    userResponse?.data?.approvedData?.tourId ||
+    userResponse?.data?.approvedData?.companyId ||
+    userResponse?.data?.serviceDetails?.id ||
+    userResponse?.data?.serviceDetails?._id;
+
   const targetSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScroll = () => {
@@ -144,10 +154,12 @@ export function ToursListing() {
             </Select>
           </div>
 
-          <Button onClick={() => router.push("/tours/new")}>
-            <MapPinned className="mr-2 h-4 w-4" />
-            Add Tour
-          </Button>
+          {tourId && (
+            <Button onClick={() => router.push("/tours/new")}>
+              <MapPinned className="mr-2 h-4 w-4" />
+              Add Tour
+            </Button>
+          )}
         </div>
       </div>
 

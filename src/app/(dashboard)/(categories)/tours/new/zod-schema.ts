@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const NewTourSchema = z
   .object({
-    tourId: z.string().min(1, "Tour ID is required"),
+    tourId: z.string().optional(),
     title: z.string().min(1, "Title is required"),
     destinations: z
       .array(z.string().min(1, "Destination cannot be empty"))
