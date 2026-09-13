@@ -19,6 +19,7 @@ import {
   IconSpeakerphone,
   IconTag,
   IconTower,
+  IconSettings,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -53,7 +54,8 @@ export const data = {
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
       { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
-      { title: "Listing", url: "/listing", icon: IconBuildingCommunity }
+      { title: "Listing", url: "/listing", icon: IconBuildingCommunity },
+      { title: "Settings", url: "/settings", icon: IconSettings },
     ],
     adventure: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
@@ -63,7 +65,8 @@ export const data = {
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
       { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
-      { title: "Listing", url: "/listing", icon: IconMapPin }
+      { title: "Listing", url: "/listing", icon: IconMapPin },
+      { title: "Settings", url: "/settings", icon: IconSettings },
     ],
     cab: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
@@ -73,7 +76,8 @@ export const data = {
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
       { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
-      { title: "Listing", url: "/listing", icon: IconMapPin }
+      { title: "Listing", url: "/listing", icon: IconMapPin },
+      { title: "Settings", url: "/settings", icon: IconSettings },
     ],
     bike: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
@@ -83,7 +87,8 @@ export const data = {
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
       { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
-      { title: "Listing", url: "/listing", icon: IconMapPin }
+      { title: "Listing", url: "/listing", icon: IconMapPin },
+      { title: "Settings", url: "/settings", icon: IconSettings },
     ],
     tour: [
       { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
@@ -93,7 +98,8 @@ export const data = {
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
       { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
-      { title: "Listing", url: "/listing", icon: IconMapPin }
+      { title: "Listing", url: "/listing", icon: IconMapPin },
+      { title: "Settings", url: "/settings", icon: IconSettings },
     ],
   },
 }

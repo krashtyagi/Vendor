@@ -152,6 +152,7 @@ export const Family: Record<string, LucideIcon> = {
 
 export const TourFeatures: Record<string, LucideIcon> = {
   guided_tour: Flag,
+  guided_tours: Flag,
   local_guide: Users,
   group_tour: Users,
   private_tour: Key,
@@ -181,16 +182,35 @@ export const TourFeatures: Record<string, LucideIcon> = {
   temple_tour: Building,
   island_hopping: Anchor,
   desert_safari: Sun,
+  hotel_booking: Building,
+  airport_transfer: Plane,
+  custom_packages: Package,
+  entry_tickets: CreditCard,
+  bonfire: Flame,
+  camping: Tent,
+  trekking: Mountain,
+  group_discount: Users,
+  family_package: Baby,
+  honeymoon_package: Heart,
+  weekend_getaway: Sun,
+  pilgrimage_tour: Building,
 };
 
 export const TourAmenities: Record<string, LucideIcon> = {
   transport_included: Bus,
+  transport: Bus,
   meals_included: Utensils,
   breakfast_included: Coffee,
   lunch_included: Utensils,
   dinner_included: Utensils,
   hotel_pickup: Car,
   hotel_dropoff: Car,
+  pickup_dropoff: Car,
+  pick_up_service: Car,
+  hotel_booking: Building,
+  airport_transfer: Plane,
+  custom_packages: Package,
+  entry_tickets: CreditCard,
   entrance_fees: CreditCard,
   travel_insurance: Shield,
   first_aid: Cross,
@@ -214,6 +234,20 @@ export const TourAmenities: Record<string, LucideIcon> = {
   live_commentary: Speaker,
   emergency_support: Phone,
   restroom_stops: DoorOpen,
+  guided_tours: Flag,
+  guided_tour: Flag,
+  sightseeing: Binoculars,
+  welcome_drink: Coffee,
+  bonfire: Flame,
+  camp_stay: Tent,
+  flight_included: Plane,
+  train_included: Bus,
+  cab_included: CarFront,
+  toll_taxes: Receipt,
+  parking_included: CircleParking,
+  guide_included: Users,
+  certified_instructor: BadgeCheck,
+  safety_gear: Shield,
 };
 
 
@@ -262,6 +296,10 @@ export const AdventureFeatures: Record<string, LucideIcon> = {
 
 export const AdventureAmenities: Record<string, LucideIcon> = {
   safety_gear: Shield,
+  certified_instructors: BadgeCheck,
+  first_aid: Cross,
+  pick_up_service: Car,
+  photos_videos: Camera,
   helmet: ShieldCheck,
   harness: Shield,
   life_jacket: LifeBuoy,
@@ -337,6 +375,11 @@ export const CabFeatures: Record<string, LucideIcon> = {
 };
 
 export const CabAmenities: Record<string, LucideIcon> = {
+  gps: Navigation,
+  ac: Snowflake,
+  carrier: Box,
+  card_payment: CreditCard,
+  english_speaking_driver: Users,
   air_conditioning: Snowflake,
   music_system: Music,
   bluetooth: Radio,
@@ -426,6 +469,8 @@ export const BikeFeatures: Record<string, LucideIcon> = {
 };
 
 export const BikeAmenities: Record<string, LucideIcon> = {
+  helmet_included: ShieldCheck,
+  gps_tracking: Navigation2,
   helmet: ShieldCheck,
   two_helmets: ShieldCheck,
   riding_gear: Shield,

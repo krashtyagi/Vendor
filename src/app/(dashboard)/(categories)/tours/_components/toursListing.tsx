@@ -35,6 +35,12 @@ import {
   Loader2,
   Route,
   Check,
+  Pencil,
+  MapPin,
+  Mountain,
+  Users,
+  Tag,
+  ImageIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageSkeleton } from "../../rooms/_components/details.skeleton";
@@ -49,6 +55,7 @@ import { cn } from "@/lib/utils";
 import Rupee from "@/components/rupee";
 import Image from "next/image";
 import { TourFeatures, TourAmenities } from "@/components/icons";
+import { ImagePreview } from "@/components/ui/image-preview";
 
 import { useCurrentUser } from "@/services/queryes";
 
@@ -60,21 +67,41 @@ const formatLabel = (key: string) => {
     .join(" ");
 };
 
+function StatChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-muted/30 border border-border/70 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex flex-col justify-between">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <span className="text-[9px] font-bold uppercase tracking-wider">{label}</span>
+      </div>
+      <p className="text-xs md:text-sm font-bold text-foreground mt-0.5 truncate capitalize">{value}</p>
+    </div>
+  );
+}
+
 export interface TourListItem {
   id: string;
   title: string;
+  description?: string;
   company: string;
   destinations: string[];
-  duration: string;
+  duration: any;
   pricing: {
     basePrice: number;
     discountPrice: number;
   };
   isActive: boolean;
-  images: { url: string; public_id: string; resource_type: string }[];
+  images: { url: string; public_id?: string; resource_type?: string }[];
   tourType?: string[];
   amenities?: string[];
   features?: string[];
+  maxPeople?: number;
+  itinerary?: any[];
+  meta?: {
+    hotelType?: string;
+    transport?: string;
+    mealPlan?: string;
+  };
 }
 
 export function ToursListing() {
@@ -171,138 +198,242 @@ export function ToursListing() {
             </div>
           ) : (
             filteredTours.map((item) => {
-              const currentPrice = item.pricing.discountPrice || item.pricing.basePrice;
+              const images = item.images || [];
+              const hasImages = images.length > 0;
               const hasDiscount =
-                !!item.pricing.discountPrice && item.pricing.discountPrice < item.pricing.basePrice;
+                Boolean(item.pricing?.discountPrice && item.pricing?.basePrice && item.pricing.discountPrice < item.pricing.basePrice);
+              const currentPrice = item.pricing?.discountPrice || item.pricing?.basePrice || 0;
+              const colsClass =
+                images.length === 1
+                  ? "grid-cols-1"
+                  : images.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3";
+
+              const durationLabel =
+                typeof item.duration === "string"
+                  ? item.duration
+                  : `${item.duration?.days || 1}D / ${item.duration?.nights || 0}N`;
 
               return (
-                <Card
+                <div
                   key={item.id}
-                  onClick={() => {
-                    handleScroll();
-                    setTourSelected(item.id);
-                  }}
-                  className="group overflow-hidden border-muted/60 bg-background hover:shadow-md transition-all duration-300 cursor-pointer p-4"
+                  className="rounded-3xl border border-border/80 shadow-sm overflow-hidden bg-card hover:shadow-md transition-all duration-200"
                 >
-                  <div className="flex flex-col md:flex-row gap-5">
-                    {/* Icon */}
-                    <div className="relative w-full md:w-48 shrink-0 overflow-hidden rounded-2xl bg-muted/40 flex items-center justify-center  border">
-                      {/* <div className="text-primary/70 transition-transform duration-500 group-hover:scale-110"> */}
-                      <img
-                        src={item?.images?.[0]?.url || "/noimage.jpg"}
-                        alt={item.title}
+                  {/* Image Strip with Fixed 200px Height */}
+                  <div className="relative w-full h-[200px] overflow-hidden bg-muted">
+                    {hasImages ? (
+                      <div className={`grid ${colsClass} gap-1 w-full h-[200px]`}>
+                        {images.slice(0, 3).map((img: any, i: number) => (
+                          <ImagePreview key={i} src={img.url} alt={item.title}>
+                            <div className="w-full h-[200px] overflow-hidden group relative">
+                              <img
+                                src={img.url}
+                                alt={item.title}
+                                className="w-full h-[200px] object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              {/* +N Overlay on 3rd image */}
+                              {i === 2 && images.length > 3 && (
+                                <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                                  <span className="text-white text-base font-bold">
+                                    +{images.length - 3}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </ImagePreview>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="w-full h-[200px] bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                        <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
+                      </div>
+                    )}
 
-                        className="object-cover rounded-md"
-                      />
-                      {/* </div> */}
-                      <Badge
-                        variant={item.isActive ? "default" : "destructive"}
-                        className="absolute left-3 top-3 backdrop-blur-md bg-opacity-90 shadow-sm border-none"
-                      >
-                        <span className="relative flex h-2 w-2 mr-2">
-                          <span
-                            className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${item.isActive ? "bg-green-400" : "bg-red-400"}`}
-                          ></span>
-                          <span
-                            className={`relative inline-flex rounded-full h-2 w-2 ${item.isActive ? "bg-green-500" : "bg-red-500"}`}
-                          ></span>
-                        </span>
-                        {item.isActive ? "Active" : "Inactive"}
+                    {/* Duration Badge */}
+                    <div className="absolute top-3 left-3 z-10">
+                      <Badge className="text-[10px] font-semibold tracking-wide bg-indigo-600/90 hover:bg-indigo-600 text-white border-0 shadow-sm gap-1 px-2.5 py-0.5 rounded-full">
+                        <Clock className="w-3 h-3" />
+                        {durationLabel}
                       </Badge>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <CardTitle className="text-xl font-bold tracking-tight">
-                              {item.title}
-                            </CardTitle>
-                            <p className="text-xs font-semibold text-muted-foreground mt-1">
-                              Provided by: {item.company}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            {hasDiscount && (
-                              <p className="text-xs text-muted-foreground line-through">
-                                ₹{item.pricing.basePrice}
-                              </p>
-                            )}
-                            <p className="text-2xl font-black text-primary">
-                              <Rupee />
-                              {currentPrice}
-                            </p>
-                            <p className="text-[10px] uppercase tracking-tighter text-muted-foreground font-bold">
-                              Per Person
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
-                          <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1 rounded-full text-foreground font-medium">
-                            <Clock className="h-3.5 w-3.5 text-primary" />
-                            <span>{item.duration}</span>
-                          </div>
-                          {item.destinations?.slice(0, 3).map((dest, idx) => (
-                            <div
-                              key={idx}
-                              className="capitalize border bg-card px-2.5 py-0.5 rounded-full font-medium"
-                            >
-                              {dest}
-                            </div>
-                          ))}
-                          {item.destinations?.length > 3 && (
-                            <span className="text-muted-foreground">
-                              +{item.destinations.length - 3} more
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Tour Types & Inclusions Badges on Card */}
-                        {((item.tourType && item.tourType.length > 0) ||
-                          (item.amenities && item.amenities.length > 0)) && (
-                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
-                            {item.tourType?.slice(0, 2).map((type, idx) => {
-                              const IconComponent = TourFeatures[type];
-                              return (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="text-[10px] font-medium py-0.5 px-2 flex items-center gap-1"
-                                >
-                                  {IconComponent && <IconComponent className="h-3 w-3 text-primary" />}
-                                  <span>{formatLabel(type)}</span>
-                                </Badge>
-                              );
-                            })}
-                            {(item.tourType?.length || 0) > 2 && (
-                              <span className="text-[10px] text-muted-foreground">
-                                +{(item.tourType?.length || 0) - 2} more types
-                              </span>
-                            )}
-                            {item.amenities && item.amenities.length > 0 && (
-                              <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border">
-                                {item.amenities.length} inclusion{item.amenities.length > 1 ? "s" : ""}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 pt-3 flex items-center justify-end border-t border-dashed">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                        >
-                          Details
-                          <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </div>
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <Badge
+                        className={`text-[10px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full ${
+                          item.isActive
+                            ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                            : "bg-zinc-500 hover:bg-zinc-600 text-white"
+                        } border-0 shadow-sm`}
+                      >
+                        {item.isActive ? "Active" : "Inactive"}
+                      </Badge>
                     </div>
                   </div>
-                </Card>
+
+                  {/* Content Section */}
+                  <div className="p-5 space-y-3.5">
+                    {/* Title + Price */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base md:text-lg font-bold text-foreground leading-snug truncate">
+                          {item.title}
+                        </h3>
+                        {item.description ? (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                            {item.description}
+                          </p>
+                        ) : (
+                          <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                            Provided by: {item.company}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        {hasDiscount && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            ₹{item.pricing.basePrice.toLocaleString()}
+                          </p>
+                        )}
+                        <p className="text-xl md:text-2xl font-black text-foreground tracking-tight">
+                          ₹{currentPrice.toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-medium -mt-0.5">
+                          /person
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Destinations */}
+                    {item.destinations && item.destinations.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <MapPin size={13} className="text-rose-500 shrink-0" />
+                        <div className="flex flex-wrap items-center gap-1 overflow-hidden">
+                          {item.destinations.map((d: string, i: number) => (
+                            <React.Fragment key={i}>
+                              <span className="font-semibold text-foreground capitalize">{d}</span>
+                              {i < item.destinations.length - 1 && (
+                                <ChevronRight size={11} className="text-muted-foreground shrink-0" />
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stats Grid: Max People, Tour Type, Itinerary */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <StatChip
+                        icon={<Users size={12} />}
+                        label="MAX PEOPLE"
+                        value={`${item.maxPeople || 10}`}
+                      />
+                      <StatChip
+                        icon={<Mountain size={12} />}
+                        label="TOUR TYPE"
+                        value={
+                          item.tourType?.length
+                            ? formatLabel(item.tourType[0])
+                            : "Standard"
+                        }
+                      />
+                      <StatChip
+                        icon={<Tag size={12} />}
+                        label="ITINERARY"
+                        value={`${item.itinerary?.length || 1} Days`}
+                      />
+                    </div>
+
+                    {/* Features Chips */}
+                    {item.features && item.features.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {item.features.slice(0, 4).map((f: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-[11px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg border border-blue-500/20 capitalize"
+                          >
+                            {f.replace(/_/g, " ")}
+                          </span>
+                        ))}
+                        {item.features.length > 4 && (
+                          <span className="text-[11px] font-semibold text-muted-foreground px-1 py-1">
+                            +{item.features.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Amenities & Inclusions */}
+                    {item.amenities && item.amenities.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {item.amenities.slice(0, 5).map((a: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-[11px] font-medium bg-muted/40 text-foreground px-2.5 py-1 rounded-lg border border-border capitalize"
+                          >
+                            {a.replace(/_/g, " ")}
+                          </span>
+                        ))}
+                        {item.amenities.length > 5 && (
+                          <span className="text-[11px] font-semibold text-muted-foreground px-1 py-1">
+                            +{item.amenities.length - 5} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Meta Info (Hotel, Transport, Meal Plan) */}
+                    {(item.meta?.hotelType || item.meta?.transport || item.meta?.mealPlan) && (
+                      <div className="flex flex-wrap gap-2 pt-1 border-t border-border/60">
+                        {item.meta.hotelType && (
+                          <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md border border-amber-500/20">
+                            🏨 {item.meta.hotelType}
+                          </span>
+                        )}
+                        {item.meta.transport && (
+                          <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            🚗 {item.meta.transport}
+                          </span>
+                        )}
+                        {item.meta.mealPlan && (
+                          <span className="text-[10px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-md border border-purple-500/20">
+                            🍽️ {item.meta.mealPlan}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions: Edit Listing & Details */}
+                    <div className="mt-3 pt-3 flex items-center justify-between border-t border-dashed">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/tours/${item.id}/edit`);
+                        }}
+                        className="rounded-xl text-xs gap-1.5 h-8 font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit Listing
+                      </Button>
+
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          handleScroll();
+                          setTourSelected(item.id);
+                        }}
+                        className="rounded-full text-xs h-8"
+                      >
+                        Details
+                        <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               );
             })
           )}

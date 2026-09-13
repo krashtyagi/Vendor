@@ -27,16 +27,21 @@ import {
   BedDouble,
   Maximize2,
   ChevronRight,
+  Pencil,
+  Eye,
+  Hotel,
+  ImageIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageSkeleton } from "./details.skeleton";
 import { useAllRooms, useRoomById } from "@/services/tanstack.query";
 import { EditRoom } from "./edit-room-sheet";
 import AddRoomForm from "../new/page";
+import { ImagePreview } from "@/components/ui/image-preview";
 
 export type BedType = {
-  _id: string;
-  type: "king" | "queen" | "single" | "double" | string;
+  _id?: string;
+  type: "king" | "queen" | "single" | "double" | "twin" | string;
   quantity: number;
 };
 
@@ -50,14 +55,34 @@ export type RoomStatus = "available" | "unavailable" | "maintenance" | string;
 export interface Room {
   id: string;
   name: string;
+  description?: string;
   price: number;
+  basePrice?: number;
+  discountPrice?: number;
+  effectivePrice?: number;
   capacity: RoomCapacity;
   roomSizeSqm: number;
   beds: BedType[];
   totalRooms: number;
   availableRooms: number;
   status: RoomStatus;
-  image: string;
+  isActive?: boolean;
+  viewType?: string;
+  amenities?: string[];
+  image?: string;
+  images?: Array<{ url: string; public_id?: string; resource_type?: string }>;
+}
+
+function StatChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-muted/30 border border-border/70 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex flex-col justify-between">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <span className="text-[9px] font-bold uppercase tracking-wider">{label}</span>
+      </div>
+      <p className="text-xs md:text-sm font-bold text-foreground mt-0.5 truncate capitalize">{value}</p>
+    </div>
+  );
 }
 
 const features = [
@@ -213,117 +238,188 @@ export function RoomListing() {
               No rooms listed yet. Add a new room service.
             </div>
           ) : (
-            filteredAndSortedRooms.map((room) => (
-              <Card
-                key={room.id}
-                onClick={() => {
-                  handleScroll();
-                  setRoomSelected(room.id);
-                  setEditMode({ id: room.id, mode: false });
-                }}
-                className="group overflow-hidden border-muted/60 bg-background hover:shadow-md transition-all duration-300 cursor-pointer md:px-3"
-              >
-                <div className="flex flex-col md:flex-row md:h-52">
-                  {/* Image Section */}
-                  <div className="relative w-full md:w-64 lg:w-72 shrink-0 overflow-hidden  rounded-2xl">
-                    <img
-                      src={room.image}
-                      alt={room.name}
-                      className="h-48 w-full object-cover md:h-full transition-transform duration-500 group-hover:scale-105 "
-                    />
+            filteredAndSortedRooms.map((room) => {
+              const images = room.images?.length
+                ? room.images
+                : room.image
+                ? [{ url: room.image }]
+                : [];
+              const hasImages = images.length > 0;
+              const bedsLabel =
+                room.beds?.map((b) => `${b.quantity}× ${b.type}`).join(", ") ||
+                "N/A";
+              const hasDiscount =
+                Boolean(room.discountPrice && room.basePrice && room.discountPrice < room.basePrice);
+              const colsClass =
+                images.length === 1
+                  ? "grid-cols-1"
+                  : images.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3";
 
-                    {/* Status Badge with Glass effect */}
-                    <Badge
-                      variant={
-                        room.status === "Available" ? "default" : "destructive"
-                      }
-                      className="absolute left-3 top-3 backdrop-blur-md bg-opacity-90 shadow-sm border-none"
-                    >
-                      <span className="relative flex h-2 w-2 mr-2">
-                        <span
-                          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${room.status === "Available" ? "bg-green-400" : "bg-red-400"}`}
-                        ></span>
-                        <span
-                          className={`relative inline-flex rounded-full h-2 w-2 ${room.status === "Available" ? "bg-green-500" : "bg-red-500"}`}
-                        ></span>
-                      </span>
-                      {room.status}
-                    </Badge>
+              return (
+                <div
+                  key={room.id}
+                  className="rounded-3xl border border-border/80 shadow-sm overflow-hidden bg-card hover:shadow-md transition-all duration-200"
+                >
+                  {/* Image Strip with Fixed Height */}
+                  <div className="relative w-full h-[200px] overflow-hidden bg-muted">
+                    {hasImages ? (
+                      <div className={`grid ${colsClass} gap-1 w-full h-[200px]`}>
+                        {images.slice(0, 3).map((img: any, i: number) => (
+                          <ImagePreview key={i} src={img.url} alt={room.name}>
+                            <div className="w-full h-[200px] overflow-hidden group relative">
+                              <img
+                                src={img.url}
+                                alt={room.name}
+                                className="w-full h-[200px] object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              {/* +N Overlay on 3rd image */}
+                              {i === 2 && images.length > 3 && (
+                                <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                                  <span className="text-white text-base font-bold">
+                                    +{images.length - 3}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </ImagePreview>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="w-full h-[200px] bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                        <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
+                      </div>
+                    )}
+
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <Badge
+                        className={`text-[10px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full ${
+                          room.isActive !== false
+                            ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                            : "bg-zinc-500 hover:bg-zinc-600 text-white"
+                        } border-0 shadow-sm`}
+                      >
+                        {room.isActive !== false ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
                   </div>
 
                   {/* Content Section */}
-                  <div className="flex flex-1 flex-col p-5">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold tracking-tight  transition-colors">
+                  <div className="p-5 space-y-3.5">
+                    {/* Title + Price */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base md:text-lg font-bold text-foreground leading-snug truncate capitalize">
                           {room.name}
-                        </CardTitle>
-
-                        {/* Icons/Amenities row */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1.5">
-                            <Maximize2 className="h-4 w-4 text-primary/70" />
-                            <span>{room.roomSizeSqm} m²</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <BedDouble className="h-4 w-4 text-primary/70" />
-                            <span>{room.beds[0].quantity} Bed</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Users className="h-4 w-4 text-primary/70" />
-                            <span>
-                              {room.capacity?.adults + room.capacity?.children}{" "}
-                              Max
-                            </span>
-                          </div>
-                        </div>
+                        </h3>
+                        {room.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                            {room.description}
+                          </p>
+                        )}
                       </div>
-
-                      {/* Pricing */}
-                      <div className="text-right">
-                        <p className="text-2xl font-black text-primary">
-                          <Rupee />{room.price}
+                      <div className="text-right shrink-0">
+                        {hasDiscount && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            ₹{room.basePrice?.toLocaleString()}
+                          </p>
+                        )}
+                        <p className="text-xl md:text-2xl font-black text-foreground tracking-tight">
+                          ₹{(room.effectivePrice || room.price).toLocaleString()}
                         </p>
-                        <p className="text-[10px] uppercase tracking-tighter text-muted-foreground font-bold">
-                          Per Night
+                        <p className="text-[10px] text-muted-foreground font-medium -mt-0.5">
+                          /night
                         </p>
                       </div>
                     </div>
 
-                    {/* Description */}
-                    <p className="mt-3 text-sm text-muted-foreground line-clamp-2 leading-relaxed italic">
-                      Luxury suite with premium amenities and scenic views.
-                    </p>
+                    {/* Stats Grid: Capacity, Beds, Size, Rooms */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <StatChip
+                        icon={<Users size={12} />}
+                        label="CAPACITY"
+                        value={`${room.capacity?.adults || 0}A / ${room.capacity?.children || 0}C`}
+                      />
+                      <StatChip
+                        icon={<BedDouble size={12} />}
+                        label="BEDS"
+                        value={bedsLabel}
+                      />
+                      <StatChip
+                        icon={<Maximize2 size={12} />}
+                        label="SIZE"
+                        value={room.roomSizeSqm ? `${room.roomSizeSqm} Sqm` : "N/A"}
+                      />
+                      <StatChip
+                        icon={<Hotel size={12} />}
+                        label="ROOMS"
+                        value={`${room.totalRooms || 1} Total`}
+                      />
+                    </div>
 
-                    {/* Footer / Meta */}
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-dashed">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">
-                          Availability
-                        </span>
-                        <span className="text-sm font-semibold text-foreground">
-                          {room.availableRooms} / {room.totalRooms}{" "}
-                          <span className="font-normal text-muted-foreground">
-                            Units left
-                          </span>
-                        </span>
+                    {/* View Type */}
+                    {room.viewType && room.viewType !== "none" && (
+                      <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        <Eye size={13} className="text-blue-500 shrink-0" />
+                        <span className="capitalize">{room.viewType} View</span>
                       </div>
+                    )}
+
+                    {/* Amenities */}
+                    {room.amenities && room.amenities.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {room.amenities.slice(0, 6).map((a: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-[11px] font-medium bg-muted/40 hover:bg-muted/70 text-foreground px-2.5 py-1 rounded-lg border border-border capitalize transition-colors"
+                          >
+                            {a.replace(/_/g, " ")}
+                          </span>
+                        ))}
+                        {room.amenities.length > 6 && (
+                          <span className="text-[11px] font-semibold text-muted-foreground px-1 py-1">
+                            +{room.amenities.length - 6} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons: Edit Listing & Details */}
+                    <div className="mt-3 pt-3 flex items-center justify-between border-t border-dashed">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/rooms/${room.id}/edit`);
+                        }}
+                        className="rounded-xl text-xs gap-1.5 h-8 font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit Listing
+                      </Button>
 
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                        onClick={() => {
+                          handleScroll();
+                          setRoomSelected(room.id);
+                          setEditMode({ id: room.id, mode: false });
+                        }}
+                        className="rounded-full text-xs h-8"
                       >
                         Details
-                        <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="ml-1 h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
                 </div>
-              </Card>
-
-            )))
-          }
+              );
+            })
+          )}
         </div>
 
         <section ref={targetSectionRef}>

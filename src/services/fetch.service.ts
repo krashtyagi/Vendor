@@ -258,3 +258,8 @@ export const deleteRoomType = async (id: string) => {
   const res = await axiosApi.delete(`/room-types/${id}`);
   return res.data;
 };
+
+export const updateRoomType = async (id: string, payload: any) => {
+  const res = await axiosApi.patch(`/room-types/${id}`, payload);
+  return res.data;
+};
