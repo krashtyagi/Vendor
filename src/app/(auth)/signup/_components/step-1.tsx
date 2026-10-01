@@ -1,12 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useFormContext, UseFormReturn } from "react-hook-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { serviceTypeEnumProps, SignUpProps } from "@/schema/auth";
 import ImageField from "./image-input";
+import { MapPin, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Step_1 = ({
   methods,
@@ -20,6 +24,48 @@ export const Step_1 = ({
     watch,
     setValue,
   } = methods;
+
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          const data = await response.json();
+          const cityVal = data.city || data.locality || "";
+          const stateVal = data.principalSubdivision || "";
+          const countryVal = data.countryName || "India";
+          const fullAddress = [cityVal, stateVal, countryVal].filter(Boolean).join(", ");
+
+          if (cityVal) setValue("city", cityVal, { shouldValidate: true });
+          if (stateVal) setValue("state", stateVal, { shouldValidate: true });
+          if (countryVal) setValue("country", countryVal, { shouldValidate: true });
+          if (fullAddress) setValue("businessAddress", fullAddress, { shouldValidate: true });
+
+          toast.success("Business location auto-filled!");
+        } catch (error) {
+          toast.error("Failed to fetch address from coordinates.");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      () => {
+        setIsLocating(false);
+        toast.error("Location access denied.");
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   return (
     <FieldGroup className="space-y-8 animate-in fade-in duration-500">
@@ -84,32 +130,52 @@ export const Step_1 = ({
       <hr className="border-border" />
 
       {/* Location Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Field className="md:col-span-3">
-          <FieldLabel htmlFor="businessAddress">Full Address</FieldLabel>
-          <Input
-            id="businessAddress"
-            placeholder="Street, Landmark..."
-            {...register("businessAddress")}
-            className={cn("h-11", errors.businessAddress && "border-destructive focus-visible:ring-destructive")}
-          />
-          {errors.businessAddress && <p className="text-xs font-medium text-destructive mt-1.5">{errors.businessAddress.message}</p>}
-        </Field>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Business Location</h3>
+            <p className="text-xs text-muted-foreground">Enter the registered address of your business.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLocating}
+            onClick={handleGetCurrentLocation}
+            className="gap-2 text-xs h-8"
+          >
+            {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+            {isLocating ? "Locating..." : "Use Current Location"}
+          </Button>
+        </div>
 
-        <Field>
-          <FieldLabel htmlFor="city">City</FieldLabel>
-          <Input id="city" placeholder="Bengaluru" {...register("city")} className="h-11" />
-        </Field>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Field className="md:col-span-3">
+            <FieldLabel htmlFor="businessAddress">Full Address</FieldLabel>
+            <Input
+              id="businessAddress"
+              placeholder="Street, Landmark..."
+              {...register("businessAddress")}
+              className={cn("h-11", errors.businessAddress && "border-destructive focus-visible:ring-destructive")}
+            />
+            {errors.businessAddress && <p className="text-xs font-medium text-destructive mt-1.5">{errors.businessAddress.message}</p>}
+          </Field>
 
-        <Field>
-          <FieldLabel htmlFor="state">State</FieldLabel>
-          <Input id="state" placeholder="Karnataka" {...register("state")} className="h-11" />
-        </Field>
+          <Field>
+            <FieldLabel htmlFor="city">City</FieldLabel>
+            <Input id="city" placeholder="Bengaluru" {...register("city")} className="h-11" />
+          </Field>
 
-        <Field>
-          <FieldLabel htmlFor="country">Country</FieldLabel>
-          <Input id="country" placeholder="India" {...register("country")} className="h-11" />
-        </Field>
+          <Field>
+            <FieldLabel htmlFor="state">State</FieldLabel>
+            <Input id="state" placeholder="Karnataka" {...register("state")} className="h-11" />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="country">Country</FieldLabel>
+            <Input id="country" placeholder="India" {...register("country")} className="h-11" />
+          </Field>
+        </div>
       </div>
 
       <hr className="border-border" />

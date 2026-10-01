@@ -86,9 +86,10 @@ export const SaveHotelDetails = async ({
   images,
   city,
   location,
+  extraAddress,
 }: {
   name: string;
-  address: string;
+  address: any;
   description: string;
   amenities: string[];
   documents: {
@@ -100,17 +101,26 @@ export const SaveHotelDetails = async ({
   images: { url: string; public_id: string; resource_type: string }[];
   city: string;
   location: { type: string; coordinates: [number, number] };
+  extraAddress?: any;
 }) => {
-  const res = await axiosApi.post("/vendors/hotels", {
+  const payload = {
     name,
-    address,
+    address: typeof address === "object" ? address : {
+      streetAddress: address,
+      city,
+      location,
+      ...(extraAddress || {}),
+    },
+    ...(extraAddress || {}),
     description,
     amenities,
     documents,
     images,
     city,
     location,
-  });
+  };
+
+  const res = await axiosApi.post("/vendors/hotels", payload);
   return {
     success: res.data.success,
     message: res.data.message,
@@ -127,26 +137,37 @@ export const SaveCabDetails = async ({
   images,
   location,
   coordinates,
+  extraAddress,
 }: {
   name: string;
-  address: string;
+  address: any;
   description: string;
   features: string[];
   documents: any[];
   images: any[];
   location: { city: string; state: string; country: string };
   coordinates: { lat: number; lng: number };
+  extraAddress?: any;
 }) => {
-  const res = await axiosApi.post("/cabs/vendor/cabs", {
+  const payload = {
     name,
-    address,
+    address: typeof address === "object" ? address : {
+      streetAddress: address,
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      ...(extraAddress || {}),
+    },
+    ...(extraAddress || {}),
     description,
     features,
     documents,
     images,
     location,
     coordinates,
-  });
+  };
+
+  const res = await axiosApi.post("/cabs/vendor/cabs", payload);
   return {
     success: res.data.success,
     message: res.data.message,
@@ -163,26 +184,37 @@ export const SaveBikeDetails = async ({
   images,
   location,
   coordinates,
+  extraAddress,
 }: {
   name: string;
-  address: string;
+  address: any;
   description: string;
   features: string[];
   documents: any[];
   images: any[];
   location: { city: string; state: string; country: string };
   coordinates: { lat: number; lng: number };
+  extraAddress?: any;
 }) => {
-  const res = await axiosApi.post("/bikes/vendor/bikes", {
+  const payload = {
     name,
-    address,
+    address: typeof address === "object" ? address : {
+      streetAddress: address,
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      ...(extraAddress || {}),
+    },
+    ...(extraAddress || {}),
     description,
     features,
     documents,
     images,
     location,
     coordinates,
-  });
+  };
+
+  const res = await axiosApi.post("/bikes/vendor/bikes", payload);
   return {
     success: res.data.success,
     message: res.data.message,
@@ -199,26 +231,37 @@ export const SaveTourDetails = async ({
   images,
   location,
   coordinates,
+  extraAddress,
 }: {
   name: string;
-  address: string;
+  address: any;
   description: string;
   features: string[];
   documents: any[];
   images: any[];
   location: { city: string; state: string; country: string };
   coordinates: { lat: number; lng: number };
+  extraAddress?: any;
 }) => {
-  const res = await axiosApi.post("/tours/vendor/tours", {
+  const payload = {
     name,
-    address,
+    address: typeof address === "object" ? address : {
+      streetAddress: address,
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      ...(extraAddress || {}),
+    },
+    ...(extraAddress || {}),
     description,
     features,
     documents,
     images,
     location,
     coordinates,
-  });
+  };
+
+  const res = await axiosApi.post("/tours/vendor/tours", payload);
   return {
     success: res.data.success,
     message: res.data.message,
@@ -238,32 +281,43 @@ export const SaveAdventureDetails = async ({
   documents,
   features,
   coordinates,
+  extraAddress,
 }: {
   name: string;
   category: string;
   city: string;
   state: string;
   country: string;
-  address: string;
+  address: any;
   description: string;
   images: any[];
   documents: any[];
   features: string[];
   coordinates: { lat: number; lng: number };
+  extraAddress?: any;
 }) => {
-  const res = await axiosApi.post("/adventures/vendor/adventures", {
+  const payload = {
     name,
     category,
     city,
     state,
     country,
-    address,
+    address: typeof address === "object" ? address : {
+      streetAddress: address,
+      city,
+      state,
+      country,
+      ...(extraAddress || {}),
+    },
+    ...(extraAddress || {}),
     description,
     images,
     documents,
     features,
     coordinates,
-  });
+  };
+
+  const res = await axiosApi.post("/adventures/vendor/adventures", payload);
   return {
     success: res.data.success,
     message: res.data.message,

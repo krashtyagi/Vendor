@@ -141,7 +141,7 @@ export const useSignUp = () => {
     city: string,
     location: { type: string; coordinates: [number, number] },
     onNext: React.Dispatch<React.SetStateAction<number>>,
-    extraFields?: { adventureCategory?: string; logo?: any }
+    extraFields?: { adventureCategory?: string; logo?: any; extraAddress?: any }
   ) => {
     setLoading(true);
 
@@ -165,8 +165,9 @@ export const useSignUp = () => {
           features: amenities,
           documents,
           images,
-          location: { city, state: "", country: "India" },
+          location: { city, state: extraFields?.extraAddress?.state || "", country: extraFields?.extraAddress?.country || "India" },
           coordinates: { lat: location.coordinates[1], lng: location.coordinates[0] },
+          extraAddress: extraFields?.extraAddress,
         });
       } else if (serviceType === "bike") {
         res = await SaveBikeDetails({
@@ -176,8 +177,9 @@ export const useSignUp = () => {
           features: amenities,
           documents,
           images,
-          location: { city, state: "", country: "India" },
+          location: { city, state: extraFields?.extraAddress?.state || "", country: extraFields?.extraAddress?.country || "India" },
           coordinates: { lat: location.coordinates[1], lng: location.coordinates[0] },
+          extraAddress: extraFields?.extraAddress,
         });
       } else if (serviceType === "tour") {
         res = await SaveTourDetails({
@@ -187,22 +189,24 @@ export const useSignUp = () => {
           features: amenities,
           documents,
           images,
-          location: { city, state: "", country: "India" },
+          location: { city, state: extraFields?.extraAddress?.state || "", country: extraFields?.extraAddress?.country || "India" },
           coordinates: { lat: location.coordinates[1], lng: location.coordinates[0] },
+          extraAddress: extraFields?.extraAddress,
         });
       } else if (serviceType === "adventure") {
         res = await SaveAdventureDetails({
           name,
           category: extraFields?.adventureCategory || "rafting",
           city,
-          state: "",
-          country: "India",
+          state: extraFields?.extraAddress?.state || "",
+          country: extraFields?.extraAddress?.country || "India",
           address,
           description,
           images,
           documents,
           features: amenities,
           coordinates: { lat: location.coordinates[1], lng: location.coordinates[0] },
+          extraAddress: extraFields?.extraAddress,
         });
       } else {
         // hotel
@@ -215,6 +219,7 @@ export const useSignUp = () => {
           images,
           city,
           location,
+          extraAddress: extraFields?.extraAddress,
         });
       }
 

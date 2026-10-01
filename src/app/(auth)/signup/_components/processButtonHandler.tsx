@@ -196,6 +196,20 @@ const ProcessButtonHandler = ({
                                         {
                                             adventureCategory: getValues("adventureCategory"),
                                             logo: getValues("logo"),
+                                            extraAddress: {
+                                                buildingName: getValues("buildingName"),
+                                                doorNumber: getValues("doorNumber"),
+                                                streetAddress: getValues("streetAddress") || getValues("hotelAddress"),
+                                                areaName: getValues("areaName"),
+                                                city: getValues("hotelCity"),
+                                                district: getValues("district"),
+                                                state: getValues("state"),
+                                                postalCode: getValues("postalCode"),
+                                                country: getValues("country") || "India",
+                                                landmark: getValues("landmark"),
+                                                directions: getValues("directions"),
+                                                formattedAddress: getValues("formattedAddress") || getValues("hotelAddress"),
+                                            },
                                         }
                                     );
                                 },

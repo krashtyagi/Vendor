@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { X, MapPin, Building2, Info, Image as ImageIcon, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { X, MapPin, Building2, Info, Image as ImageIcon, FileText, CheckCircle2, Loader2, ChevronDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -156,6 +156,7 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const [showDetailedAddress, setShowDetailedAddress] = useState(false);
     const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
@@ -189,14 +190,28 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                     );
                     const data = await response.json();
 
-                    // 3. Auto-fill the form fields
-                    // Ensure these strings match your SignUpProps schema keys
-                    setValue("hotelCity", data.city || data.locality || "");
-                    // setValue("hotelCountry", data.countryName || ""); 
+                    // 3. Auto-fill basic form fields
+                    const city = data.city || data.locality || "";
+                    const stateVal = data.principalSubdivision || "";
+                    const countryVal = data.countryName || "India";
+                    const postalCode = data.postcode || "";
+                    const areaName = data.locality || "";
+                    const districtEntry = data.localityInfo?.administrative?.find(
+                        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+                    );
+                    const district = districtEntry?.name || "";
 
-                    // If you want to fill the address field with a formatted string
-                    const fullAddress = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                    setValue("hotelCity", city);
+                    const fullAddress = [city, stateVal, countryVal].filter(Boolean).join(", ");
                     setValue("hotelAddress", fullAddress);
+
+                    // 4. Auto-fill structured address fields for deep address storage
+                    if (areaName) setValue("areaName", areaName);
+                    if (district) setValue("district", district);
+                    setValue("state", stateVal);
+                    if (postalCode) setValue("postalCode", postalCode);
+                    setValue("country", countryVal);
+                    setValue("formattedAddress", fullAddress);
 
                     toast.success("Location and address synced!");
                 } catch (error) {
@@ -274,6 +289,36 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Address" {...register("hotelAddress")} className={inputClasses} />
                     <Input placeholder="City" {...register("hotelCity")} className={inputClasses} />
+                </div>
+
+                {/* Detailed Address (Collapsible) */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors w-full"
+                    >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="font-medium">Detailed Address</span>
+                        <span className="text-[10px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Optional</span>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300 ml-auto", showDetailedAddress && "rotate-180")} />
+                    </button>
+                    <p className="text-[11px] text-muted-foreground">
+                        Add building name, landmark, and other details to help guests find your property easily.
+                    </p>
+
+                    {showDetailedAddress && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+                            <Input placeholder="Building / Property Name" {...register("buildingName")} className={inputClasses} />
+                            <Input placeholder="Door / Floor Number" {...register("doorNumber")} className={inputClasses} />
+                            <Input placeholder="Area / Locality" {...register("areaName")} className={inputClasses} />
+                            <Input placeholder="District" {...register("district")} className={inputClasses} />
+                            <Input placeholder="State" {...register("state")} className={inputClasses} />
+                            <Input placeholder="Postal Code" {...register("postalCode")} className={inputClasses} />
+                            <Input placeholder="Landmark (e.g. Near Central Mall)" {...register("landmark")} className={inputClasses} />
+                            <Input placeholder="Directions to reach" {...register("directions")} className={inputClasses} />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -421,6 +466,7 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const [showDetailedAddress, setShowDetailedAddress] = useState(false);
     const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
@@ -447,9 +493,28 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
                         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                     );
                     const data = await response.json();
-                    setValue("hotelCity", data.city || data.locality || "");
-                    const fullAddress = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                    const city = data.city || data.locality || "";
+                    const stateVal = data.principalSubdivision || "";
+                    const countryVal = data.countryName || "India";
+                    const postalCode = data.postcode || "";
+                    const areaName = data.locality || "";
+                    const districtEntry = data.localityInfo?.administrative?.find(
+                        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+                    );
+                    const district = districtEntry?.name || "";
+
+                    setValue("hotelCity", city);
+                    const fullAddress = [city, stateVal, countryVal].filter(Boolean).join(", ");
                     setValue("hotelAddress", fullAddress);
+
+                    // Auto-fill structured address fields
+                    if (areaName) setValue("areaName", areaName);
+                    if (district) setValue("district", district);
+                    setValue("state", stateVal);
+                    if (postalCode) setValue("postalCode", postalCode);
+                    setValue("country", countryVal);
+                    setValue("formattedAddress", fullAddress);
+
                     toast.success("Location and address synced!");
                 } catch (error) {
                     toast.error("Coordinates found, but failed to fetch address.");
@@ -525,6 +590,36 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Address" {...register("hotelAddress")} className={inputClasses} />
                     <Input placeholder="City" {...register("hotelCity")} className={inputClasses} />
+                </div>
+
+                {/* Detailed Address (Collapsible) */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors w-full"
+                    >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="font-medium">Detailed Address</span>
+                        <span className="text-[10px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Optional</span>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300 ml-auto", showDetailedAddress && "rotate-180")} />
+                    </button>
+                    <p className="text-[11px] text-muted-foreground">
+                        Add building name, landmark, and other details to help passengers and drivers locate your depot.
+                    </p>
+
+                    {showDetailedAddress && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+                            <Input placeholder="Building / Office Name" {...register("buildingName")} className={inputClasses} />
+                            <Input placeholder="Door / Floor Number" {...register("doorNumber")} className={inputClasses} />
+                            <Input placeholder="Area / Locality" {...register("areaName")} className={inputClasses} />
+                            <Input placeholder="District" {...register("district")} className={inputClasses} />
+                            <Input placeholder="State" {...register("state")} className={inputClasses} />
+                            <Input placeholder="Postal Code" {...register("postalCode")} className={inputClasses} />
+                            <Input placeholder="Landmark (e.g. Near Central Station)" {...register("landmark")} className={inputClasses} />
+                            <Input placeholder="Directions to reach" {...register("directions")} className={inputClasses} />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -669,6 +764,7 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const [showDetailedAddress, setShowDetailedAddress] = useState(false);
     const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
@@ -695,9 +791,28 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
                         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                     );
                     const data = await response.json();
-                    setValue("hotelCity", data.city || data.locality || "");
-                    const fullAddress = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                    const city = data.city || data.locality || "";
+                    const stateVal = data.principalSubdivision || "";
+                    const countryVal = data.countryName || "India";
+                    const postalCode = data.postcode || "";
+                    const areaName = data.locality || "";
+                    const districtEntry = data.localityInfo?.administrative?.find(
+                        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+                    );
+                    const district = districtEntry?.name || "";
+
+                    setValue("hotelCity", city);
+                    const fullAddress = [city, stateVal, countryVal].filter(Boolean).join(", ");
                     setValue("hotelAddress", fullAddress);
+
+                    // Auto-fill structured address fields
+                    if (areaName) setValue("areaName", areaName);
+                    if (district) setValue("district", district);
+                    setValue("state", stateVal);
+                    if (postalCode) setValue("postalCode", postalCode);
+                    setValue("country", countryVal);
+                    setValue("formattedAddress", fullAddress);
+
                     toast.success("Location and address synced!");
                 } catch (error) {
                     toast.error("Coordinates found, but failed to fetch address.");
@@ -773,6 +888,36 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Address" {...register("hotelAddress")} className={inputClasses} />
                     <Input placeholder="City" {...register("hotelCity")} className={inputClasses} />
+                </div>
+
+                {/* Detailed Address (Collapsible) */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors w-full"
+                    >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="font-medium">Detailed Address</span>
+                        <span className="text-[10px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Optional</span>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300 ml-auto", showDetailedAddress && "rotate-180")} />
+                    </button>
+                    <p className="text-[11px] text-muted-foreground">
+                        Add building name, landmark, and other details to help riders find your rental shop.
+                    </p>
+
+                    {showDetailedAddress && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+                            <Input placeholder="Building / Shop Name" {...register("buildingName")} className={inputClasses} />
+                            <Input placeholder="Door / Floor Number" {...register("doorNumber")} className={inputClasses} />
+                            <Input placeholder="Area / Locality" {...register("areaName")} className={inputClasses} />
+                            <Input placeholder="District" {...register("district")} className={inputClasses} />
+                            <Input placeholder="State" {...register("state")} className={inputClasses} />
+                            <Input placeholder="Postal Code" {...register("postalCode")} className={inputClasses} />
+                            <Input placeholder="Landmark (e.g. Near Bus Stand)" {...register("landmark")} className={inputClasses} />
+                            <Input placeholder="Directions to reach" {...register("directions")} className={inputClasses} />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -917,6 +1062,7 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const [showDetailedAddress, setShowDetailedAddress] = useState(false);
     const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
@@ -943,9 +1089,29 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
                         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                     );
                     const data = await response.json();
-                    setValue("hotelCity", data.city || data.locality || "");
-                    const fullAddress = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                    // Auto-fill basic form fields
+                    const city = data.city || data.locality || "";
+                    const stateVal = data.principalSubdivision || "";
+                    const countryVal = data.countryName || "India";
+                    const postalCode = data.postcode || "";
+                    const areaName = data.locality || "";
+                    const districtEntry = data.localityInfo?.administrative?.find(
+                        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+                    );
+                    const district = districtEntry?.name || "";
+
+                    setValue("hotelCity", city);
+                    const fullAddress = [city, stateVal, countryVal].filter(Boolean).join(", ");
                     setValue("hotelAddress", fullAddress);
+
+                    // Auto-fill structured address fields
+                    if (areaName) setValue("areaName", areaName);
+                    if (district) setValue("district", district);
+                    setValue("state", stateVal);
+                    if (postalCode) setValue("postalCode", postalCode);
+                    setValue("country", countryVal);
+                    setValue("formattedAddress", fullAddress);
+
                     toast.success("Location and address synced!");
                 } catch (error) {
                     toast.error("Coordinates found, but failed to fetch address.");
@@ -1021,6 +1187,36 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Address" {...register("hotelAddress")} className={inputClasses} />
                     <Input placeholder="City" {...register("hotelCity")} className={inputClasses} />
+                </div>
+
+                {/* Detailed Address (Collapsible) */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors w-full"
+                    >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="font-medium">Detailed Address</span>
+                        <span className="text-[10px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Optional</span>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300 ml-auto", showDetailedAddress && "rotate-180")} />
+                    </button>
+                    <p className="text-[11px] text-muted-foreground">
+                        Add building name, landmark, and other details to help guests find your property easily.
+                    </p>
+
+                    {showDetailedAddress && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+                            <Input placeholder="Building / Office Name" {...register("buildingName")} className={inputClasses} />
+                            <Input placeholder="Door / Floor Number" {...register("doorNumber")} className={inputClasses} />
+                            <Input placeholder="Area / Locality" {...register("areaName")} className={inputClasses} />
+                            <Input placeholder="District" {...register("district")} className={inputClasses} />
+                            <Input placeholder="State" {...register("state")} className={inputClasses} />
+                            <Input placeholder="Postal Code" {...register("postalCode")} className={inputClasses} />
+                            <Input placeholder="Landmark (e.g. Near Central Mall)" {...register("landmark")} className={inputClasses} />
+                            <Input placeholder="Directions to reach" {...register("directions")} className={inputClasses} />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1165,6 +1361,7 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
     const { register, formState: { errors }, watch, setValue, control, getValues } = methods;
 
     const [isLocating, setIsLocating] = useState(false);
+    const [showDetailedAddress, setShowDetailedAddress] = useState(false);
     const logo = watch("logo");
     const images = watch("images") || [];
     const documents = watch("documents") || [];
@@ -1192,9 +1389,28 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
                         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                     );
                     const data = await response.json();
-                    setValue("hotelCity", data.city || data.locality || "");
-                    const fullAddress = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                    const city = data.city || data.locality || "";
+                    const stateVal = data.principalSubdivision || "";
+                    const countryVal = data.countryName || "India";
+                    const postalCode = data.postcode || "";
+                    const areaName = data.locality || "";
+                    const districtEntry = data.localityInfo?.administrative?.find(
+                        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+                    );
+                    const district = districtEntry?.name || "";
+
+                    setValue("hotelCity", city);
+                    const fullAddress = [city, stateVal, countryVal].filter(Boolean).join(", ");
                     setValue("hotelAddress", fullAddress);
+
+                    // Auto-fill structured address fields
+                    if (areaName) setValue("areaName", areaName);
+                    if (district) setValue("district", district);
+                    setValue("state", stateVal);
+                    if (postalCode) setValue("postalCode", postalCode);
+                    setValue("country", countryVal);
+                    setValue("formattedAddress", fullAddress);
+
                     toast.success("Location and address synced!");
                 } catch (error) {
                     toast.error("Coordinates found, but failed to fetch address.");
@@ -1291,6 +1507,36 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Address" {...register("hotelAddress")} className={inputClasses} />
                     <Input placeholder="City" {...register("hotelCity")} className={inputClasses} />
+                </div>
+
+                {/* Detailed Address (Collapsible) */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors w-full"
+                    >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="font-medium">Detailed Address</span>
+                        <span className="text-[10px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Optional</span>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300 ml-auto", showDetailedAddress && "rotate-180")} />
+                    </button>
+                    <p className="text-[11px] text-muted-foreground">
+                        Add base camp name, landmark, and other details to help adventurers find your camp easily.
+                    </p>
+
+                    {showDetailedAddress && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+                            <Input placeholder="Camp / Base Name" {...register("buildingName")} className={inputClasses} />
+                            <Input placeholder="Door / Office Number" {...register("doorNumber")} className={inputClasses} />
+                            <Input placeholder="Area / Locality" {...register("areaName")} className={inputClasses} />
+                            <Input placeholder="District" {...register("district")} className={inputClasses} />
+                            <Input placeholder="State" {...register("state")} className={inputClasses} />
+                            <Input placeholder="Postal Code" {...register("postalCode")} className={inputClasses} />
+                            <Input placeholder="Landmark (e.g. Near River Bridge)" {...register("landmark")} className={inputClasses} />
+                            <Input placeholder="Directions to reach" {...register("directions")} className={inputClasses} />
+                        </div>
+                    )}
                 </div>
             </div>
 

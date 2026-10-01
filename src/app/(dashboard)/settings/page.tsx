@@ -19,6 +19,7 @@ import {
   Plus,
   Tag,
   Save,
+  ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { IconsBundle } from "@/components/icons";
 import { AdvertisementBannerSection } from "./_components/advertisement-banner-section";
+import { cn } from "@/lib/utils";
 
 // Dynamically import Leaflet LocationMap with SSR disabled
 const LocationMap = dynamic(() => import("./_components/location-map"), {
@@ -51,11 +53,11 @@ const LocationMap = dynamic(() => import("./_components/location-map"), {
 });
 
 interface LocationHistoryItem {
-  address?: string;
+  address?: string | any;
   city?: string;
   state?: string;
   country?: string;
-  coordinates?: [number, number] | null;
+  coordinates?: [number, number] | { lat?: number; lng?: number } | null;
   changedAt?: string | Date;
 }
 
@@ -65,9 +67,18 @@ interface PropertySettingsData {
   name: string;
   description: string;
   address: string;
+  addressDetails?: any;
+  buildingName?: string;
+  doorNumber?: string;
+  areaName?: string;
+  district?: string;
   city: string;
   state: string;
+  postalCode?: string;
   country: string;
+  landmark?: string;
+  directions?: string;
+  formattedAddress?: string;
   coordinates?: [number, number] | null;
   images: Array<{ url: string; public_id?: string; resource_type?: string }>;
   amenities: string[];
@@ -126,10 +137,18 @@ export default function PropertySettingsPage() {
   const [serviceType, setServiceType] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
+  const [buildingName, setBuildingName] = useState("");
+  const [doorNumber, setDoorNumber] = useState("");
+  const [areaName, setAreaName] = useState("");
+  const [district, setDistrict] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("India");
+  const [landmark, setLandmark] = useState("");
+  const [directions, setDirections] = useState("");
   const [coords, setCoords] = useState<[number, number]>([28.6139, 77.209]);
+  const [showDetailedAddress, setShowDetailedAddress] = useState(false);
   const [images, setImages] = useState<
     Array<{ url: string; public_id?: string; resource_type?: string }>
   >([]);
@@ -155,9 +174,28 @@ export default function PropertySettingsPage() {
         setServiceType(d.serviceType || "");
         setDescription(d.description || "");
         setAddress(d.address || "");
+        setBuildingName(d.buildingName || "");
+        setDoorNumber(d.doorNumber || "");
+        setAreaName(d.areaName || "");
+        setDistrict(d.district || "");
         setCity(d.city || "");
         setState(d.state || "");
+        setPostalCode(d.postalCode || "");
         setCountry(d.country || "India");
+        setLandmark(d.landmark || "");
+        setDirections(d.directions || "");
+
+        if (
+          d.buildingName ||
+          d.doorNumber ||
+          d.areaName ||
+          d.district ||
+          d.postalCode ||
+          d.landmark ||
+          d.directions
+        ) {
+          setShowDetailedAddress(true);
+        }
 
         if (d.coordinates && Array.isArray(d.coordinates) && d.coordinates.length >= 2) {
           const c0 = Number(d.coordinates[0]);
@@ -208,9 +246,16 @@ export default function PropertySettingsPage() {
     try {
       const res = await axiosApi.patch("/vendors/property-settings", {
         address,
+        buildingName,
+        doorNumber,
+        areaName,
+        district,
         city,
         state,
+        postalCode,
         country,
+        landmark,
+        directions,
         coordinates: [coords[1], coords[0]], // GeoJSON [lng, lat]
         lat: coords[0],
         lng: coords[1],
@@ -272,10 +317,27 @@ export default function PropertySettingsPage() {
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
       );
       const data = await response.json();
-      if (data.city || data.locality) setCity(data.city || data.locality || "");
-      if (data.principalSubdivision) setState(data.principalSubdivision);
-      if (data.countryName) setCountry(data.countryName);
-      toast.success("Location coordinates updated!");
+      const cityVal = data.city || data.locality || "";
+      const stateVal = data.principalSubdivision || "";
+      const countryVal = data.countryName || "India";
+      const postalCodeVal = data.postcode || "";
+      const areaVal = data.locality || "";
+      const districtEntry = data.localityInfo?.administrative?.find(
+        (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+      );
+      const districtVal = districtEntry?.name || "";
+
+      if (cityVal) setCity(cityVal);
+      if (stateVal) setState(stateVal);
+      if (countryVal) setCountry(countryVal);
+      if (postalCodeVal) setPostalCode(postalCodeVal);
+      if (areaVal) setAreaName(areaVal);
+      if (districtVal) setDistrict(districtVal);
+
+      const fullAddress = [cityVal, stateVal, countryVal].filter(Boolean).join(", ");
+      if (fullAddress && !address) setAddress(fullAddress);
+
+      toast.success("Location coordinates & details synced!");
     } catch {
       toast.success(`Coords set: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
     }
@@ -298,13 +360,24 @@ export default function PropertySettingsPage() {
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
           );
           const data = await response.json();
-          if (data.city || data.locality) setCity(data.city || data.locality || "");
-          if (data.principalSubdivision) setState(data.principalSubdivision);
-          if (data.countryName) setCountry(data.countryName);
+          const cityVal = data.city || data.locality || "";
+          const stateVal = data.principalSubdivision || "";
+          const countryVal = data.countryName || "India";
+          const postalCodeVal = data.postcode || "";
+          const areaVal = data.locality || "";
+          const districtEntry = data.localityInfo?.administrative?.find(
+            (a: any) => a.description?.toLowerCase().includes("district") || a.order === 6
+          );
+          const districtVal = districtEntry?.name || "";
 
-          const fullAddress = [data.locality, data.city, data.principalSubdivision, data.countryName]
-            .filter(Boolean)
-            .join(", ");
+          if (cityVal) setCity(cityVal);
+          if (stateVal) setState(stateVal);
+          if (countryVal) setCountry(countryVal);
+          if (postalCodeVal) setPostalCode(postalCodeVal);
+          if (areaVal) setAreaName(areaVal);
+          if (districtVal) setDistrict(districtVal);
+
+          const fullAddress = [cityVal, stateVal, countryVal].filter(Boolean).join(", ");
           if (fullAddress && !address) setAddress(fullAddress);
 
           toast.success("Current location detected and synced!");
@@ -521,7 +594,7 @@ export default function PropertySettingsPage() {
 
           {/* Address Fields */}
           <div className="space-y-1.5 pt-2">
-            <Label className="text-xs font-semibold">Street Address</Label>
+            <Label className="text-xs font-semibold">Street / Formatted Address</Label>
             <Input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -542,6 +615,88 @@ export default function PropertySettingsPage() {
               <Label className="text-xs font-semibold">Country</Label>
               <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. India" />
             </div>
+          </div>
+
+          {/* Detailed Structured Address (Collapsible) */}
+          <div className="pt-2 border-t border-border/50 space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowDetailedAddress(!showDetailedAddress)}
+              className="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors w-full cursor-pointer py-1"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              <span>Detailed Structured Address Breakdown</span>
+              <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/50">
+                Building, Area, Landmark, Directions
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform duration-300 ml-auto",
+                  showDetailedAddress && "rotate-180"
+                )}
+              />
+            </button>
+
+            {showDetailedAddress && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-xl bg-muted/20 border border-border/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Building / Property Name</Label>
+                  <Input
+                    value={buildingName}
+                    onChange={(e) => setBuildingName(e.target.value)}
+                    placeholder="e.g. Pine View Residency"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Door / Floor Number</Label>
+                  <Input
+                    value={doorNumber}
+                    onChange={(e) => setDoorNumber(e.target.value)}
+                    placeholder="e.g. Suite 402, 4th Floor"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Area / Locality</Label>
+                  <Input
+                    value={areaName}
+                    onChange={(e) => setAreaName(e.target.value)}
+                    placeholder="e.g. Dal Lake Waterfront"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">District / County</Label>
+                  <Input
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    placeholder="e.g. Srinagar District"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Postal Code / PIN</Label>
+                  <Input
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="e.g. 190001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Landmark</Label>
+                  <Input
+                    value={landmark}
+                    onChange={(e) => setLandmark(e.target.value)}
+                    placeholder="e.g. Opposite Ghat No. 2"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2 md:col-span-3">
+                  <Label className="text-xs font-medium">Directions to Reach</Label>
+                  <Input
+                    value={directions}
+                    onChange={(e) => setDirections(e.target.value)}
+                    placeholder="e.g. 200m from Central Boulevard, take lane opposite Gate 2"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Manual Coord Inputs */}
@@ -821,6 +976,15 @@ export default function PropertySettingsPage() {
                       })
                     : "Archived";
 
+                  const addrObj = typeof item.address === "object" && item.address !== null ? item.address : null;
+                  const displayAddress = addrObj
+                    ? (addrObj.formattedAddress || addrObj.streetAddress || addrObj.buildingName || "Address recorded")
+                    : (item.address || "Address not specified");
+                  const displayCity = addrObj?.city || item.city || "";
+                  const displayState = addrObj?.state || item.state || "";
+                  const displayCountry = addrObj?.country || item.country || "";
+                  const displayCoords = item.coordinates || addrObj?.location?.coordinates || null;
+
                   return (
                     <div
                       key={index}
@@ -828,7 +992,7 @@ export default function PropertySettingsPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-foreground">
-                          {item.address || "Address not specified"}
+                          {displayAddress}
                         </span>
                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -836,11 +1000,11 @@ export default function PropertySettingsPage() {
                         </span>
                       </div>
                       <p className="text-muted-foreground">
-                        {[item.city, item.state, item.country].filter(Boolean).join(", ")}
+                        {[displayCity, displayState, displayCountry].filter(Boolean).join(", ")}
                       </p>
-                      {item.coordinates && (
+                      {displayCoords && (
                         <p className="text-[10px] text-muted-foreground font-mono">
-                          Coords: {JSON.stringify(item.coordinates)}
+                          Coords: {JSON.stringify(displayCoords)}
                         </p>
                       )}
                     </div>
