@@ -37,8 +37,22 @@ import {
 import { axiosApi } from "@/lib/axios";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
-import { IconsBundle } from "@/components/icons";
+import {
+  IconsBundle,
+  amenityIconMap,
+  RoomFeatures,
+  ComfortAndClimate,
+  Facilities,
+  FoodAndDrinks,
+  RulesAndAccess,
+  ConnectivityAndBusiness,
+  Transport,
+  Family,
+  Locations,
+} from "@/components/icons";
+import { AiDescriptionButton } from "@/components/ai-description-button";
 import { AdvertisementBannerSection } from "./_components/advertisement-banner-section";
+import { HotelImageArranger, HotelImageItem } from "./_components/hotel-image-arranger";
 import { cn } from "@/lib/utils";
 
 // Dynamically import Leaflet LocationMap with SSR disabled
@@ -163,6 +177,36 @@ export default function PropertySettingsPage() {
   // Amenities UI
   const [amenitySearch, setAmenitySearch] = useState("");
   const [customAmenityInput, setCustomAmenityInput] = useState("");
+  const [amenityCategory, setAmenityCategory] = useState<string>("all");
+
+  const AMENITY_CATEGORIES = useMemo(
+    () => [
+      { id: "all", label: "All Amenities" },
+      { id: "room", label: "Room Features" },
+      { id: "climate", label: "Comfort & Climate" },
+      { id: "facilities", label: "Facilities & Wellness" },
+      { id: "food", label: "Food & Drinks" },
+      { id: "rules", label: "Rules & Access" },
+      { id: "business", label: "Work & WiFi" },
+      { id: "services", label: "Transport & Family" },
+      { id: "custom", label: "Custom Added" },
+    ],
+    []
+  );
+
+  const categoryMap = useMemo<Record<string, string[]>>(() => {
+    return {
+      all: Array.from(new Set([...Object.keys(IconsBundle), ...amenities])),
+      room: Object.keys(RoomFeatures),
+      climate: Object.keys(ComfortAndClimate),
+      facilities: Object.keys(Facilities),
+      food: Object.keys(FoodAndDrinks),
+      rules: Object.keys(RulesAndAccess),
+      business: Object.keys(ConnectivityAndBusiness),
+      services: [...Object.keys(Transport), ...Object.keys(Family), ...Object.keys(Locations)],
+      custom: amenities.filter((a) => !(IconsBundle as any)[a]),
+    };
+  }, [amenities]);
 
   const fetchSettings = async () => {
     try {
@@ -274,17 +318,21 @@ export default function PropertySettingsPage() {
     }
   };
 
-  const saveImages = async () => {
+  const saveImages = async (imagesToSave?: HotelImageItem[]) => {
     setSavingImages(true);
     try {
-      const res = await axiosApi.patch("/vendors/property-settings", { images });
+      const payloadImages = imagesToSave || images;
+      const res = await axiosApi.patch("/vendors/property-settings", { images: payloadImages });
       if (res.data?.success) {
-        toast.success("Gallery photos saved!");
+        toast.success("Property gallery photos & layout order saved!");
+        if (imagesToSave) {
+          setImages(imagesToSave);
+        }
       } else {
         throw new Error(res.data?.message || "Failed");
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to save gallery");
+      toast.error(err.response?.data?.message || err.message || "Failed to save photos");
     } finally {
       setSavingImages(false);
     }
@@ -447,12 +495,15 @@ export default function PropertySettingsPage() {
   };
 
   const filteredIconKeys = useMemo(() => {
-    const allKeys = Object.keys(IconsBundle);
-    if (!amenitySearch.trim()) return allKeys.slice(0, 48);
-    return allKeys
-      .filter((k) => k.toLowerCase().includes(amenitySearch.toLowerCase()))
-      .slice(0, 48);
-  }, [amenitySearch]);
+    const activePool =
+      amenityCategory === "all"
+        ? Array.from(new Set([...Object.keys(IconsBundle), ...amenities]))
+        : (categoryMap[amenityCategory] || Object.keys(IconsBundle));
+
+    if (!amenitySearch.trim()) return activePool;
+    const query = amenitySearch.toLowerCase();
+    return activePool.filter((k) => k.toLowerCase().includes(query));
+  }, [amenityCategory, amenitySearch, categoryMap, amenities]);
 
   // ── Loading State ───────────────────────────────────────────────────
 
@@ -530,7 +581,18 @@ export default function PropertySettingsPage() {
                 Public description on search results and property detail pages.
               </CardDescription>
             </div>
-            <SectionSaveButton saving={savingDescription} onClick={saveDescription} label="Save Description" />
+            <div className="flex items-center gap-2">
+              <AiDescriptionButton
+                name={name}
+                serviceType={serviceType}
+                city={city}
+                state={state}
+                amenities={amenities}
+                currentDescription={description}
+                onGenerated={(aiText) => setDescription(aiText)}
+              />
+              <SectionSaveButton saving={savingDescription} onClick={saveDescription} label="Save Description" />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -731,65 +793,16 @@ export default function PropertySettingsPage() {
         </CardContent>
       </Card>
 
-      {/* ── 4. Property Photos Gallery ─────────────────────────────────── */}
-      <Card className="rounded-2xl border-border/80 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Property Gallery Photos
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Photos of the entrance, reception, scenic views, and facilities.
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImages}
-                  className="hidden"
-                />
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors cursor-pointer">
-                  {uploadingImages ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <UploadCloud className="h-3.5 w-3.5" />
-                  )}
-                  Upload
-                </span>
-              </label>
-              <SectionSaveButton saving={savingImages} onClick={saveImages} label="Save Photos" />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {images.length === 0 ? (
-            <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground text-xs">
-              No gallery images uploaded yet. Click &quot;Upload&quot; to showcase your property.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {images.map((img, i) => (
-                <div key={i} className="group relative aspect-video rounded-xl overflow-hidden border bg-muted">
-                  <img src={img.url} alt={`Property photo ${i + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(i)}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-red-600 text-white transition-colors cursor-pointer"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* ── 4. Property Photos Gallery & Arranger ────────────────────────── */}
+      <HotelImageArranger
+        images={images}
+        onChange={(updated) => setImages(updated)}
+        onSave={saveImages}
+        onUpload={handleImageUpload}
+        saving={savingImages}
+        uploading={uploadingImages}
+        propertyName={name}
+      />
 
       {/* ── 5. Amenities with icons.tsx ─────────────────────────────────── */}
       <Card className="rounded-2xl border-border/80 shadow-sm">
@@ -865,12 +878,41 @@ export default function PropertySettingsPage() {
             )}
           </div>
 
-          {/* Catalog from icons.tsx */}
+          {/* Category Filter Tabs */}
           <div className="space-y-2 pt-2">
-            <Label className="text-xs font-semibold text-muted-foreground">
-              Available Catalog (Click to Toggle)
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-60 overflow-y-auto pr-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Available Catalog ({filteredIconKeys.length} items)
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                Click any amenity to add or remove
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
+              {AMENITY_CATEGORIES.map((cat) => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setAmenityCategory(cat.id)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border",
+                    amenityCategory === cat.id
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/60 border-transparent hover:text-foreground"
+                  )}
+                >
+                  {cat.label}
+                  {cat.id === "custom" && categoryMap.custom.length > 0 && (
+                    <span className="ml-1.5 px-1 py-0.2 bg-primary/20 text-primary rounded-full text-[10px]">
+                      {categoryMap.custom.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-72 overflow-y-auto pr-1">
               {filteredIconKeys.map((key) => {
                 const IconComponent = (IconsBundle as any)[key] || Tag;
                 const isSelected = amenities.includes(key);

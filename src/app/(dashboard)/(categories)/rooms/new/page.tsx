@@ -39,6 +39,11 @@ import { useCurrentUser } from "@/services/queryes";
 import { PageSkeleton } from "../_components/details.skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
+import { RoomImageArranger } from "../_components/room-image-arranger";
+import { axiosApi } from "@/lib/axios";
+import { AiDescriptionButton } from "@/components/ai-description-button";
+import { Badge } from "@/components/ui/badge";
+
 export const amenityKeys = Object.keys(amenityIconMap) as (keyof typeof amenityIconMap)[];
 const AddRoomForm = ({
   setEditMode,
@@ -58,6 +63,8 @@ const AddRoomForm = ({
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
   const [amenitySearch, setAmenitySearch] = useState("");
+  const [propertyCustomAmenities, setPropertyCustomAmenities] = useState<string[]>([]);
+  const [customAmenityInput, setCustomAmenityInput] = useState("");
   const form = useForm<NewRoomProps>({
     resolver: zodResolver(NewRoomSchema),
     defaultValues: {
@@ -84,6 +91,47 @@ const AddRoomForm = ({
       form.setValue("hotelId", id);
     }
   }, [data, form]);
+
+  // Load custom/active amenities from property settings
+  useEffect(() => {
+    axiosApi
+      .get("/vendors/property-settings")
+      .then((res) => {
+        if (res.data?.success && Array.isArray(res.data.data?.amenities)) {
+          setPropertyCustomAmenities((prev) =>
+            Array.from(new Set([...prev, ...res.data.data.amenities]))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const selectedAmenities = form.watch("amenities") || [];
+
+  const allAvailableAmenities = useMemo(() => {
+    const set = new Set<string>([
+      ...amenityKeys,
+      ...propertyCustomAmenities,
+      ...selectedAmenities,
+    ]);
+    return Array.from(set);
+  }, [propertyCustomAmenities, selectedAmenities]);
+
+  const handleAddCustomAmenity = () => {
+    const trimmed = customAmenityInput.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!trimmed) return;
+    if (!propertyCustomAmenities.includes(trimmed)) {
+      setPropertyCustomAmenities((prev) => [...prev, trimmed]);
+    }
+    if (!selectedAmenities.includes(trimmed)) {
+      form.setValue("amenities", [...selectedAmenities, trimmed], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+    setCustomAmenityInput("");
+    toast.success(`Amenity "${trimmed.replace(/_/g, " ")}" added to room!`);
+  };
 
 
 
@@ -197,7 +245,7 @@ const AddRoomForm = ({
             .join(", ");
           toast.error(`Form validation failed: ${errorMsg}`);
         })}
-        className="space-y-6 pb-12"
+        className="space-y-6 pb-4"
       >
         <Card className="rounded-2xl border-none shadow-lg">
           <CardHeader className="flex flex-row justify-between items-center">
@@ -217,63 +265,21 @@ const AddRoomForm = ({
             <Accordion type="multiple" defaultValue={["images", "basic", "capacity", "amenities"]}>
               {/* ── Images ─────────────────────────────────────── */}
               <AccordionItem value="images">
-                <AccordionTrigger>Room Images</AccordionTrigger>
+                <AccordionTrigger>Room Images & Layout Arrangement</AccordionTrigger>
                 <AccordionContent>
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap gap-4">
-                      {form.watch("images").map((url, idx) => (
-                        <div key={url.url} className="relative group">
-                          <div className="h-28 w-40 rounded-xl overflow-hidden border shadow-sm">
-                            <Image
-                              src={url.url}
-                              alt={`Room image ${idx + 1}`}
-                              width={160}
-                              height={112}
-                              className="object-cover"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="absolute -top-2 -right-2 bg-card text-white rounded-full z-4 p-1.5 shadow-md hover:bg-destructive/90"
-                            disabled={uploading}
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-
-                      <label
-                        className={`h-28 w-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-all ${uploading ? "opacity-60 cursor-not-allowed" : ""
-                          }`}
-                      >
-                        <Input
-                          type="file"
-                          multiple
-                          // accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          onChange={handleImageChange}
-                          disabled={uploading}
-                        />
-                        {uploading ? (
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        ) : (
-                          <>
-                            <Plus size={28} className="text-muted-foreground" />
-                            <span className="mt-2 text-sm font-medium text-muted-foreground">
-                              Add Images
-                            </span>
-                          </>
-                        )}
-                      </label>
-                    </div>
-
-                    {form.formState.errors.images && (
-                      <p className="text-sm text-destructive">
-                        {form.formState.errors.images.message}
-                      </p>
-                    )}
-                  </div>
+                  <RoomImageArranger
+                    images={form.watch("images") || []}
+                    onChange={(newImages) =>
+                      form.setValue("images", newImages, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                    onUpload={handleImageChange}
+                    onRemove={removeImage}
+                    uploading={uploading}
+                    errorMessage={form.formState.errors.images?.message}
+                  />
                 </AccordionContent>
               </AccordionItem>
 
@@ -418,7 +424,22 @@ const AddRoomForm = ({
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description *</FormLabel>
+                        <div className="flex items-center justify-between pb-1">
+                          <FormLabel>Description *</FormLabel>
+                          <AiDescriptionButton
+                            name={form.watch("name") || "Hotel Room"}
+                            serviceType="hotel room"
+                            amenities={selectedAmenities}
+                            context={`Size: ${form.watch("roomSizeSqm")} sqm, View: ${form.watch("viewType")}, Capacity: ${form.watch("capacity.adults")} adults`}
+                            currentDescription={field.value}
+                            onGenerated={(aiText) =>
+                              form.setValue("description", aiText, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
+                          />
+                        </div>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -632,42 +653,88 @@ const AddRoomForm = ({
 
               {/* ── Amenities ──────────────────────────────────── */}
               <AccordionItem value="amenities">
-                <AccordionTrigger>Amenities & Features</AccordionTrigger>
+                <AccordionTrigger>
+                  <div className="flex items-center gap-2">
+                    <span>Amenities & Features</span>
+                    {selectedAmenities.length > 0 && (
+                      <Badge variant="outline" className="text-[10px] font-semibold">
+                        {selectedAmenities.length} selected
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
                 <AccordionContent>
-                  <div className="pt-2 pb-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-2">
                     <Input
                       placeholder="Search amenities..."
                       value={amenitySearch}
                       onChange={(e) => setAmenitySearch(e.target.value)}
-                      className="max-w-xs"
+                      className="max-w-xs text-xs h-8"
                     />
+
+                    {/* Custom Amenity Adder */}
+                    <div className="flex items-center gap-2 max-w-sm w-full">
+                      <Input
+                        placeholder="Add custom amenity (e.g. jacuzzi)..."
+                        value={customAmenityInput}
+                        onChange={(e) => setCustomAmenityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomAmenity();
+                          }
+                        }}
+                        className="text-xs h-8"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddCustomAmenity}
+                        className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add Custom
+                      </Button>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-4">
-                    {amenityKeys
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3 max-h-72 overflow-y-auto pr-1">
+                    {allAvailableAmenities
                       .filter((id) => id.toLowerCase().includes(amenitySearch.toLowerCase()))
-                      .map((id) => (
-                        <FormField
-                          key={id}
-                          control={form.control}
-                          name="amenities"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(id)}
-                                  onCheckedChange={(checked) => {
-                                    const arr = field.value || [];
-                                    field.onChange(
-                                      checked ? [...arr, id] : arr.filter((v) => v !== id)
-                                    );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal capitalize">{id.replace("_", " ")}</FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      ))}
+                      .map((id) => {
+                        const isCustom = !amenityKeys.includes(id as any);
+                        return (
+                          <FormField
+                            key={id}
+                            control={form.control}
+                            name="amenities"
+                            render={({ field }) => (
+                              <FormItem className="flex items-center space-x-3 space-y-0 p-2 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(id)}
+                                    onCheckedChange={(checked) => {
+                                      const arr = field.value || [];
+                                      field.onChange(
+                                        checked ? [...arr, id] : arr.filter((v) => v !== id)
+                                      );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize truncate cursor-pointer text-xs flex-1">
+                                  {id.replace(/_/g, " ")}
+                                </FormLabel>
+                                {isCustom && (
+                                  <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase font-semibold">
+                                    Custom
+                                  </Badge>
+                                )}
+                              </FormItem>
+                            )}
+                          />
+                        );
+                      })}
                   </div>
                 </AccordionContent>
               </AccordionItem>

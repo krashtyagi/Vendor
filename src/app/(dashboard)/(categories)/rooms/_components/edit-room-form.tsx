@@ -33,6 +33,7 @@ import { toast } from "sonner";
 
 import { amenityIconMap } from "@/components/icons";
 import { NewRoomProps, NewRoomSchema } from "../new/zod-schema";
+import { RoomImageArranger } from "./room-image-arranger";
 
 export default function AddRoomForm({
   setEditMode,
@@ -184,65 +185,21 @@ export default function AddRoomForm({
             <Accordion type="multiple" defaultValue={["images", "basic", "capacity", "amenities"]}>
               {/* ── Images ─────────────────────────────────────── */}
               <AccordionItem value="images">
-                <AccordionTrigger>Room Images</AccordionTrigger>
+                <AccordionTrigger>Room Images & Layout Arrangement</AccordionTrigger>
                 <AccordionContent>
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap gap-4">
-                      {/* Previews – using uploaded URLs when available */}
-                      {form.watch("images").map((url, idx) => (
-                        <div key={url.url} className="relative group">
-                          <div className="h-28 w-40 rounded-xl overflow-hidden border shadow-sm">
-                            <Image
-                              src={url.url}
-                              alt={`Room image ${idx + 1}`}
-                              width={160}
-                              height={112}
-                              className="object-cover"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 shadow-md hover:bg-destructive/90"
-                            disabled={uploading}
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-
-                      {/* Upload button with spinner */}
-                      <label
-                        className={`h-28 w-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-all ${uploading ? "opacity-60 cursor-not-allowed" : ""
-                          }`}
-                      >
-                        <Input
-                          type="file"
-                          multiple
-                          accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          onChange={handleImageChange}
-                          disabled={uploading}
-                        />
-                        {uploading ? (
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        ) : (
-                          <>
-                            <Plus size={28} className="text-muted-foreground" />
-                            <span className="mt-2 text-sm font-medium text-muted-foreground">
-                              Add Images
-                            </span>
-                          </>
-                        )}
-                      </label>
-                    </div>
-
-                    {form.formState.errors.images && (
-                      <p className="text-sm text-destructive">
-                        {form.formState.errors.images.message}
-                      </p>
-                    )}
-                  </div>
+                  <RoomImageArranger
+                    images={form.watch("images") || []}
+                    onChange={(newImages) =>
+                      form.setValue("images", newImages, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                    onUpload={handleImageChange}
+                    onRemove={removeImage}
+                    uploading={uploading}
+                    errorMessage={form.formState.errors.images?.message}
+                  />
                 </AccordionContent>
               </AccordionItem>
 

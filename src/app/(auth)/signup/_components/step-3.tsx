@@ -16,6 +16,7 @@ import ImageField from "./image-input";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/stores/auth.store";
+import { AiDescriptionButton } from "@/components/ai-description-button";
 
 
 
@@ -245,9 +246,20 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Info className="w-4 h-4 text-primary" />
-                        <FieldLabel className="text-slate-200">Description</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <FieldLabel className="text-slate-200">Description</FieldLabel>
+                        </div>
+                        <AiDescriptionButton
+                            name={watch("name")}
+                            serviceType="hotel"
+                            city={watch("city") || (watch("address") as any)?.city}
+                            state={watch("state") || (watch("address") as any)?.state}
+                            amenities={(((watch as any)("features") || (watch as any)("amenities") || []) as string[])}
+                            currentDescription={watch("description")}
+                            onGenerated={(aiText) => setValue("description", aiText, { shouldValidate: true, shouldDirty: true })}
+                        />
                     </div>
                     <textarea
                         {...register("description")}
@@ -546,9 +558,20 @@ export const Step_3_cab = ({ methods }: { currentStep: number; methods: UseFormR
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Info className="w-4 h-4 text-primary" />
-                        <FieldLabel className="text-slate-200">Description / Fleet Details</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <FieldLabel className="text-slate-200">Description / Fleet Details</FieldLabel>
+                        </div>
+                        <AiDescriptionButton
+                            name={watch("name")}
+                            serviceType="cab"
+                            city={watch("city") || (watch("address") as any)?.city}
+                            state={watch("state") || (watch("address") as any)?.state}
+                            amenities={(((watch as any)("features") || []) as string[])}
+                            currentDescription={watch("description")}
+                            onGenerated={(aiText) => setValue("description", aiText, { shouldValidate: true, shouldDirty: true })}
+                        />
                     </div>
                     <textarea
                         {...register("description")}
@@ -844,9 +867,20 @@ export const Step_3_bike = ({ methods }: { currentStep: number; methods: UseForm
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Info className="w-4 h-4 text-primary" />
-                        <FieldLabel className="text-slate-200">Description / Policies</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <FieldLabel className="text-slate-200">Description / Policies</FieldLabel>
+                        </div>
+                        <AiDescriptionButton
+                            name={watch("name")}
+                            serviceType="bike"
+                            city={watch("city") || (watch("address") as any)?.city}
+                            state={watch("state") || (watch("address") as any)?.state}
+                            amenities={(((watch as any)("features") || []) as string[])}
+                            currentDescription={watch("description")}
+                            onGenerated={(aiText) => setValue("description", aiText, { shouldValidate: true, shouldDirty: true })}
+                        />
                     </div>
                     <textarea
                         {...register("description")}
@@ -1143,9 +1177,20 @@ export const Step_3_tour = ({ methods }: { currentStep: number; methods: UseForm
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Info className="w-4 h-4 text-primary" />
-                        <FieldLabel className="text-slate-200">Description & Tour Highlights</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <FieldLabel className="text-slate-200">Description & Tour Highlights</FieldLabel>
+                        </div>
+                        <AiDescriptionButton
+                            name={watch("name")}
+                            serviceType="tour"
+                            city={watch("city") || (watch("address") as any)?.city}
+                            state={watch("state") || (watch("address") as any)?.state}
+                            amenities={(((watch as any)("features") || []) as string[])}
+                            currentDescription={watch("description")}
+                            onGenerated={(aiText) => setValue("description", aiText, { shouldValidate: true, shouldDirty: true })}
+                        />
                     </div>
                     <textarea
                         {...register("description")}
@@ -1463,9 +1508,20 @@ export const Step_3_adventure = ({ methods }: { currentStep: number; methods: Us
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Info className="w-4 h-4 text-primary" />
-                        <FieldLabel className="text-slate-200">Description & Safety Protocols</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-primary" />
+                            <FieldLabel className="text-slate-200">Description & Safety Protocols</FieldLabel>
+                        </div>
+                        <AiDescriptionButton
+                            name={watch("name")}
+                            serviceType="adventure"
+                            city={watch("city") || (watch("address") as any)?.city}
+                            state={watch("state") || (watch("address") as any)?.state}
+                            amenities={(((watch as any)("features") || []) as string[])}
+                            currentDescription={watch("description")}
+                            onGenerated={(aiText) => setValue("description", aiText, { shouldValidate: true, shouldDirty: true })}
+                        />
                     </div>
                     <textarea
                         {...register("description")}

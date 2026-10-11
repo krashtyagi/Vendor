@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,8 +18,15 @@ import {
   Hotel,
   Eye,
   Sparkles,
+  Tag,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -48,6 +55,9 @@ import { useCurrentUser } from "@/services/queryes";
 import { getRoomById, updateRoomType } from "@/services/fetch.service";
 import { NewRoomProps, NewRoomSchema } from "../../new/zod-schema";
 import { amenityIconMap } from "@/components/icons";
+import { RoomImageArranger } from "../../_components/room-image-arranger";
+import { axiosApi } from "@/lib/axios";
+import { AiDescriptionButton } from "@/components/ai-description-button";
 
 export const availableAmenities = Object.keys(amenityIconMap);
 
@@ -69,6 +79,8 @@ export default function EditRoomPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [amenitySearch, setAmenitySearch] = useState("");
+  const [propertyCustomAmenities, setPropertyCustomAmenities] = useState<string[]>([]);
+  const [customAmenityInput, setCustomAmenityInput] = useState("");
 
   const form = useForm<NewRoomProps>({
     resolver: zodResolver(NewRoomSchema),
@@ -90,7 +102,11 @@ export default function EditRoomPage() {
     mode: "onChange",
   });
 
-  const { fields: bedFields, append: appendBed, remove: removeBed } = useFieldArray({
+  const {
+    fields: bedFields,
+    append: appendBed,
+    remove: removeBed,
+  } = useFieldArray({
     control: form.control,
     name: "beds",
   });
@@ -151,12 +167,54 @@ export default function EditRoomPage() {
     };
   }, [roomId, hotelId, form]);
 
+  // Load custom/active amenities from property settings
+  useEffect(() => {
+    axiosApi
+      .get("/vendors/property-settings")
+      .then((res) => {
+        if (res.data?.success && Array.isArray(res.data.data?.amenities)) {
+          setPropertyCustomAmenities((prev) =>
+            Array.from(new Set([...prev, ...res.data.data.amenities]))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const selectedAmenities = form.watch("amenities") || [];
+
+  const allAvailableAmenities = useMemo(() => {
+    const set = new Set<string>([
+      ...availableAmenities,
+      ...propertyCustomAmenities,
+      ...selectedAmenities,
+    ]);
+    return Array.from(set);
+  }, [propertyCustomAmenities, selectedAmenities]);
+
+  const handleAddCustomAmenity = () => {
+    const trimmed = customAmenityInput.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!trimmed) return;
+    if (!propertyCustomAmenities.includes(trimmed)) {
+      setPropertyCustomAmenities((prev) => [...prev, trimmed]);
+    }
+    if (!selectedAmenities.includes(trimmed)) {
+      form.setValue("amenities", [...selectedAmenities, trimmed], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+    setCustomAmenityInput("");
+    toast.success(`Amenity "${trimmed.replace(/_/g, " ")}" added to room!`);
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     const files = Array.from(e.target.files);
     setUploading(true);
 
-    const newUrls: { url: string; public_id: string; resource_type: string }[] = [];
+    const newUrls: { url: string; public_id: string; resource_type: string }[] =
+      [];
 
     for (const file of files) {
       try {
@@ -189,7 +247,7 @@ export default function EditRoomPage() {
     form.setValue(
       "images",
       currentImages.filter((_, i) => i !== index),
-      { shouldValidate: true, shouldDirty: true }
+      { shouldValidate: true, shouldDirty: true },
     );
   };
 
@@ -209,7 +267,11 @@ export default function EditRoomPage() {
         throw new Error(res?.message || "Failed to update room type");
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to save room changes");
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to save room changes",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -225,10 +287,9 @@ export default function EditRoomPage() {
   }
 
   const images = form.watch("images") || [];
-  const selectedAmenities = form.watch("amenities") || [];
 
   return (
-    <div className="w-full space-y-6 pb-16 font-sans">
+    <div className="w-full space-y-6 pb-4 font-sans">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 border-b pb-4">
         <div className="flex items-center gap-3">
@@ -300,9 +361,14 @@ export default function EditRoomPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Room Name</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Room Name
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Deluxe Ocean View Suite" {...field} />
+                        <Input
+                          placeholder="e.g. Deluxe Ocean View Suite"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -314,8 +380,13 @@ export default function EditRoomPage() {
                   name="viewType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">View Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || "none"}>
+                      <FormLabel className="text-xs font-semibold">
+                        View Type
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "none"}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select view type" />
@@ -326,9 +397,13 @@ export default function EditRoomPage() {
                           <SelectItem value="city">City View</SelectItem>
                           <SelectItem value="garden">Garden View</SelectItem>
                           <SelectItem value="sea">Sea / Ocean View</SelectItem>
-                          <SelectItem value="mountain">Mountain View</SelectItem>
+                          <SelectItem value="mountain">
+                            Mountain View
+                          </SelectItem>
                           <SelectItem value="pool">Pool View</SelectItem>
-                          <SelectItem value="courtyard">Courtyard View</SelectItem>
+                          <SelectItem value="courtyard">
+                            Courtyard View
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -342,7 +417,24 @@ export default function EditRoomPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Description</FormLabel>
+                    <div className="flex items-center justify-between pb-1">
+                      <FormLabel className="text-xs font-semibold">
+                        Description
+                      </FormLabel>
+                      <AiDescriptionButton
+                        name={form.watch("name") || "Hotel Room"}
+                        serviceType="hotel room"
+                        amenities={selectedAmenities}
+                        context={`Size: ${form.watch("roomSizeSqm")} sqm, View: ${form.watch("viewType")}, Capacity: ${form.watch("capacity.adults")} adults`}
+                        currentDescription={field.value}
+                        onGenerated={(aiText) =>
+                          form.setValue("description", aiText, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                      />
+                    </div>
                     <FormControl>
                       <Textarea
                         rows={3}
@@ -392,12 +484,16 @@ export default function EditRoomPage() {
                   name="basePrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Base Price (₹/night)</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Base Price (₹/night)
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -410,13 +506,17 @@ export default function EditRoomPage() {
                   name="discountPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Discounted Price (₹)</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Discounted Price (₹)
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           placeholder="Optional"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -429,12 +529,16 @@ export default function EditRoomPage() {
                   name="totalRooms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Total Inventory</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Total Inventory
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -447,12 +551,16 @@ export default function EditRoomPage() {
                   name="roomSizeSqm"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Size (Sqm)</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Size (Sqm)
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -478,12 +586,16 @@ export default function EditRoomPage() {
                   name="capacity.adults"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Adults Max</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Adults Max
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -496,12 +608,16 @@ export default function EditRoomPage() {
                   name="capacity.children"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Children Max</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Children Max
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -536,7 +652,10 @@ export default function EditRoomPage() {
                       name={`beds.${index}.type`}
                       render={({ field }) => (
                         <FormItem className="flex-1">
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Bed Type" />
@@ -565,7 +684,9 @@ export default function EditRoomPage() {
                               type="number"
                               min={1}
                               {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -590,86 +711,83 @@ export default function EditRoomPage() {
             </CardContent>
           </Card>
 
-          {/* Gallery Images */}
-          <Card className="rounded-2xl border-border/80 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Room Photos
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Upload high quality photos showing the room interior and view.
-                  </CardDescription>
-                </div>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors">
-                    {uploading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <UploadCloud className="h-3.5 w-3.5" />
-                    )}
-                    Upload Photos
-                  </span>
-                </label>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {images.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground text-xs">
-                  No images uploaded yet. Click &quot;Upload Photos&quot; to add gallery images.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {images.map((img, i) => (
-                    <div key={i} className="group relative aspect-video rounded-xl overflow-hidden border bg-muted">
-                      <img
-                        src={img.url}
-                        alt={`Room photo ${i + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-red-600 text-white transition-colors"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Gallery Images with Index Arrangement & Live Preview */}
+          <RoomImageArranger
+            images={images}
+            onChange={(newImages) =>
+              form.setValue("images", newImages, {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
+            onUpload={handleImageUpload}
+            onRemove={removeImage}
+            uploading={uploading}
+            errorMessage={form.formState.errors.images?.message}
+          />
 
           {/* Amenities Selection */}
           <Card className="rounded-2xl border-border/80 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold">Room Amenities</CardTitle>
-              <div className="pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    Room Amenities & Features
+                    {selectedAmenities.length > 0 && (
+                      <Badge variant="outline" className="text-[10px] font-semibold">
+                        {selectedAmenities.length} selected
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Choose verified hotel amenities or add custom room features below.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Filter amenities..."
+                    value={amenitySearch}
+                    onChange={(e) => setAmenitySearch(e.target.value)}
+                    className="max-w-[180px] text-xs h-8"
+                  />
+                </div>
+              </div>
+
+              {/* Custom Amenity Adder */}
+              <div className="flex items-center gap-2 max-w-sm pt-2">
                 <Input
-                  placeholder="Filter amenities..."
-                  value={amenitySearch}
-                  onChange={(e) => setAmenitySearch(e.target.value)}
-                  className="max-w-xs text-xs"
+                  placeholder="Add custom room amenity (e.g. jacuzzi)..."
+                  value={customAmenityInput}
+                  onChange={(e) => setCustomAmenityInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomAmenity();
+                    }
+                  }}
+                  className="text-xs h-8"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCustomAmenity}
+                  className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Custom
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-64 overflow-y-auto pr-2">
-                {availableAmenities
-                  .filter((a) => a.toLowerCase().includes(amenitySearch.toLowerCase()))
+                {allAvailableAmenities
+                  .filter((a) =>
+                    a.toLowerCase().includes(amenitySearch.toLowerCase()),
+                  )
                   .map((amenity) => {
                     const isChecked = selectedAmenities.includes(amenity);
+                    const isCustom = !availableAmenities.includes(amenity);
                     return (
                       <label
                         key={amenity}
@@ -683,16 +801,26 @@ export default function EditRoomPage() {
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              form.setValue("amenities", [...selectedAmenities, amenity]);
+                              form.setValue("amenities", [
+                                ...selectedAmenities,
+                                amenity,
+                              ]);
                             } else {
                               form.setValue(
                                 "amenities",
-                                selectedAmenities.filter((a) => a !== amenity)
+                                selectedAmenities.filter((a) => a !== amenity),
                               );
                             }
                           }}
                         />
-                        <span className="capitalize">{amenity.replace(/_/g, " ")}</span>
+                        <span className="capitalize truncate">
+                          {amenity.replace(/_/g, " ")}
+                        </span>
+                        {isCustom && (
+                          <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-4 uppercase font-semibold">
+                            Custom
+                          </Badge>
+                        )}
                       </label>
                     );
                   })}
