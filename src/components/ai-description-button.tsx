@@ -86,7 +86,7 @@ export function AiDescriptionButton({
         "rounded-xl text-xs h-8 gap-1.5 font-medium transition-all duration-200 border-primary/30 text-primary hover:bg-primary/10 shadow-xs",
         className
       )}
-      title="Generate listing description using Gemini 2.5 Flash"
+      title="Generate listing description using Gemini 3.8 Flash"
     >
       {loading ? (
         <>

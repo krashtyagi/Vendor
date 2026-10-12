@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     let apiKey = process.env.GEMINI_API_KEY;
+
     if (!apiKey) {
       try {
         const fs = await import("fs");
@@ -26,6 +27,17 @@ export async function POST(req: NextRequest) {
           if (match && match[1]) apiKey = match[1].trim();
         }
       } catch {}
+    }
+
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "GEMINI_API_KEY is missing. Please add GEMINI_API_KEY to your Vercel Environment Variables.",
+        },
+        { status: 500 },
+      );
     }
 
     const amenitiesList =
@@ -52,17 +64,25 @@ Requirements:
 - Output pure, ready-to-publish plain text paragraphs.`;
     }
 
-    // Attempt with gemini-2.5-flash first as requested, fallback to gemini-3.8-flash if not supported
-    const modelsToTry = ["gemini-2.5-flash", "gemini-3.8-flash"];
+    // Try modern active Gemini models
+    const modelsToTry = [
+      "gemini-3.8-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-flash-latest",
+    ];
     let generatedText = "";
     let lastError = "";
 
     for (const model of modelsToTry) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             contents: [
               {
@@ -75,6 +95,7 @@ Requirements:
             },
           }),
         });
+        clearTimeout(timeoutId);
 
         const data = await response.json();
         if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
