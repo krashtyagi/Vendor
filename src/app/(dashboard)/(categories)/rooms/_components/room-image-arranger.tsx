@@ -217,7 +217,7 @@ export function RoomImageArranger<T extends RoomImageItem = RoomImageItem>({
                         type="button"
                         onClick={() => onRemove(index)}
                         title="Remove"
-                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/50 hover:bg-red-600 text-white transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 sm:bg-black/50 hover:bg-red-600 text-white transition-colors cursor-pointer opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -227,7 +227,7 @@ export function RoomImageArranger<T extends RoomImageItem = RoomImageItem>({
                         type="button"
                         onClick={() => setSelectedImageModal(img.url)}
                         title="View full size"
-                        className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                        className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/60 sm:bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <Maximize2 className="h-3 w-3" />
                       </button>

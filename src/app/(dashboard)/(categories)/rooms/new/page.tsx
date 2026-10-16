@@ -4,14 +4,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2, X, Plus, Hotel, UploadCloud, Users, Sparkles } from "lucide-react";
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -262,30 +262,67 @@ const AddRoomForm = ({
           </CardHeader>
 
           <CardContent className="space-y-8 pt-6">
-            <Accordion type="multiple" defaultValue={["images", "basic", "capacity", "amenities"]}>
-              {/* ── Images ─────────────────────────────────────── */}
-              <AccordionItem value="images">
-                <AccordionTrigger>Room Images & Layout Arrangement</AccordionTrigger>
-                <AccordionContent>
-                  <RoomImageArranger
-                    images={form.watch("images") || []}
-                    onChange={(newImages) =>
-                      form.setValue("images", newImages, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    onUpload={handleImageChange}
-                    onRemove={removeImage}
-                    uploading={uploading}
-                    errorMessage={form.formState.errors.images?.message}
-                  />
-                </AccordionContent>
-              </AccordionItem>
+            <Tabs defaultValue="basic" className="w-full space-y-6">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto p-1.5 bg-muted/60 rounded-2xl border border-border/60 gap-1.5">
+                <TabsTrigger
+                  value="basic"
+                  className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+                >
+                  <Hotel className="h-4 w-4 text-primary" />
+                  <span>Basic & Pricing</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="images"
+                  className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+                >
+                  <UploadCloud className="h-4 w-4 text-primary" />
+                  <span>Room Photos</span>
+                  {(form.watch("images") || []).length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                      {(form.watch("images") || []).length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="capacity"
+                  className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+                >
+                  <Users className="h-4 w-4 text-primary" />
+                  <span>Capacity & Beds</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="amenities"
+                  className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span>Amenities</span>
+                  {selectedAmenities.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                      {selectedAmenities.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
 
-              <AccordionItem value="basic">
-                <AccordionTrigger>Basic Information</AccordionTrigger>
-                <AccordionContent className="space-y-6 pt-4">
+              {/* ── Room Photos Tab ─────────────────────────────── */}
+              <TabsContent value="images" className="space-y-4 pt-2">
+                <RoomImageArranger
+                  images={form.watch("images") || []}
+                  onChange={(newImages) =>
+                    form.setValue("images", newImages, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                  onUpload={handleImageChange}
+                  onRemove={removeImage}
+                  uploading={uploading}
+                  errorMessage={form.formState.errors.images?.message}
+                />
+              </TabsContent>
+
+              {/* ── Basic Information Tab ────────────────────────── */}
+              <TabsContent value="basic" className="space-y-6 pt-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <FormField
                       control={form.control}
@@ -451,13 +488,10 @@ const AddRoomForm = ({
                       </FormItem>
                     )}
                   />
-                </AccordionContent>
-              </AccordionItem>
-              {/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
-              {/* ── Capacity & Beds ────────────────────────────── */}
-              <AccordionItem value="capacity">
-                <AccordionTrigger>Capacity & Beds</AccordionTrigger>
-                <AccordionContent className="space-y-8 pt-4">
+              </TabsContent>
+
+              {/* ── Capacity & Beds Tab ────────────────────────── */}
+              <TabsContent value="capacity" className="space-y-8 pt-2">
                   {/* Capacity */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -591,154 +625,84 @@ const AddRoomForm = ({
                       </div>
                     ))}
                   </div>
-                  {/* <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold">Bed Configurations</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => appendBed({ type: "double", quantity: 1 })}
-                      >
-                        Add Bed Type
-                      </Button>
-                    </div>
+              </TabsContent>
 
-                    {bedFields.map((field, index) => (
-                      <div key={field.id} className="flex gap-4 items-end border-b pb-4">
+              {/* ── Amenities Tab ──────────────────────────────── */}
+              <TabsContent value="amenities" className="space-y-4 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-2">
+                  <Input
+                    placeholder="Search amenities..."
+                    value={amenitySearch}
+                    onChange={(e) => setAmenitySearch(e.target.value)}
+                    className="max-w-xs text-xs h-8"
+                  />
+
+                  {/* Custom Amenity Adder */}
+                  <div className="flex items-center gap-2 max-w-sm w-full">
+                    <Input
+                      placeholder="Add custom amenity (e.g. jacuzzi)..."
+                      value={customAmenityInput}
+                      onChange={(e) => setCustomAmenityInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomAmenity();
+                        }
+                      }}
+                      className="text-xs h-8"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddCustomAmenity}
+                      className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Custom
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3 max-h-72 overflow-y-auto pr-1">
+                  {allAvailableAmenities
+                    .filter((id) => id.toLowerCase().includes(amenitySearch.toLowerCase()))
+                    .map((id) => {
+                      const isCustom = !amenityKeys.includes(id as any);
+                      return (
                         <FormField
+                          key={id}
                           control={form.control}
-                          name={`beds.${index}.type`}
+                          name="amenities"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>Bed Type</FormLabel>
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-2 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors">
                               <FormControl>
-                                <Input {...field} placeholder="King, Queen, Twin..." />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`beds.${index}.quantity`}
-                          render={({ field }) => (
-                            <FormItem className="w-32">
-                              <FormLabel>Quantity</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
+                                <Checkbox
+                                  checked={field.value?.includes(id)}
+                                  onCheckedChange={(checked) => {
+                                    const arr = field.value || [];
+                                    field.onChange(
+                                      checked ? [...arr, id] : arr.filter((v) => v !== id)
+                                    );
+                                  }}
                                 />
                               </FormControl>
-                              <FormMessage />
+                              <FormLabel className="font-normal capitalize truncate cursor-pointer text-xs flex-1">
+                                {id.replace(/_/g, " ")}
+                              </FormLabel>
+                              {isCustom && (
+                                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase font-semibold">
+                                  Custom
+                                </Badge>
+                              )}
                             </FormItem>
                           )}
                         />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="mb-2"
-                          onClick={() => removeBed(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div> */}
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* ── Amenities ──────────────────────────────────── */}
-              <AccordionItem value="amenities">
-                <AccordionTrigger>
-                  <div className="flex items-center gap-2">
-                    <span>Amenities & Features</span>
-                    {selectedAmenities.length > 0 && (
-                      <Badge variant="outline" className="text-[10px] font-semibold">
-                        {selectedAmenities.length} selected
-                      </Badge>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-2">
-                    <Input
-                      placeholder="Search amenities..."
-                      value={amenitySearch}
-                      onChange={(e) => setAmenitySearch(e.target.value)}
-                      className="max-w-xs text-xs h-8"
-                    />
-
-                    {/* Custom Amenity Adder */}
-                    <div className="flex items-center gap-2 max-w-sm w-full">
-                      <Input
-                        placeholder="Add custom amenity (e.g. jacuzzi)..."
-                        value={customAmenityInput}
-                        onChange={(e) => setCustomAmenityInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddCustomAmenity();
-                          }
-                        }}
-                        className="text-xs h-8"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddCustomAmenity}
-                        className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Add Custom
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3 max-h-72 overflow-y-auto pr-1">
-                    {allAvailableAmenities
-                      .filter((id) => id.toLowerCase().includes(amenitySearch.toLowerCase()))
-                      .map((id) => {
-                        const isCustom = !amenityKeys.includes(id as any);
-                        return (
-                          <FormField
-                            key={id}
-                            control={form.control}
-                            name="amenities"
-                            render={({ field }) => (
-                              <FormItem className="flex items-center space-x-3 space-y-0 p-2 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(id)}
-                                    onCheckedChange={(checked) => {
-                                      const arr = field.value || [];
-                                      field.onChange(
-                                        checked ? [...arr, id] : arr.filter((v) => v !== id)
-                                      );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal capitalize truncate cursor-pointer text-xs flex-1">
-                                  {id.replace(/_/g, " ")}
-                                </FormLabel>
-                                {isCustom && (
-                                  <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase font-semibold">
-                                    Custom
-                                  </Badge>
-                                )}
-                              </FormItem>
-                            )}
-                          />
-                        );
-                      })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                      );
+                    })}
+                </div>
+              </TabsContent>
+            </Tabs>
 
             <Separator className="my-8" />
 

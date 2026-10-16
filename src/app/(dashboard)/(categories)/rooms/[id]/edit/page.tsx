@@ -27,6 +27,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
+import { useDeleteRoomType } from "@/services/tanstack.query";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -81,6 +89,22 @@ export default function EditRoomPage() {
   const [amenitySearch, setAmenitySearch] = useState("");
   const [propertyCustomAmenities, setPropertyCustomAmenities] = useState<string[]>([]);
   const [customAmenityInput, setCustomAmenityInput] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteRoomMutation = useDeleteRoomType();
+
+  const handleDeleteRoom = () => {
+    if (!roomId) return;
+    deleteRoomMutation.mutate(roomId, {
+      onSuccess: () => {
+        toast.success("Room deleted successfully");
+        setIsDeleteDialogOpen(false);
+        router.push("/rooms");
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.message || "Failed to delete room");
+      },
+    });
+  };
 
   const form = useForm<NewRoomProps>({
     resolver: zodResolver(NewRoomSchema),
@@ -313,6 +337,17 @@ export default function EditRoomPage() {
 
         <div className="flex items-center gap-2">
           <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isSubmitting || deleteRoomMutation.isPending}
+            className="text-destructive hover:bg-destructive/10 border-destructive/30"
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" />
+            Delete Room
+          </Button>
+          <Button
             variant="outline"
             size="sm"
             onClick={() => router.push("/rooms")}
@@ -343,332 +378,76 @@ export default function EditRoomPage() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Details */}
-          <Card className="rounded-2xl border-border/80 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
+          <Tabs defaultValue="basic" className="w-full space-y-6">
+            <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto p-1.5 bg-muted/60 rounded-2xl border border-border/60 gap-1.5">
+              <TabsTrigger
+                value="basic"
+                className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+              >
                 <Hotel className="h-4 w-4 text-primary" />
-                Basic Details
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Title, descriptions, and operational room status.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Room Name
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. Deluxe Ocean View Suite"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="viewType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        View Type
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || "none"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select view type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">None / Standard</SelectItem>
-                          <SelectItem value="city">City View</SelectItem>
-                          <SelectItem value="garden">Garden View</SelectItem>
-                          <SelectItem value="sea">Sea / Ocean View</SelectItem>
-                          <SelectItem value="mountain">
-                            Mountain View
-                          </SelectItem>
-                          <SelectItem value="pool">Pool View</SelectItem>
-                          <SelectItem value="courtyard">
-                            Courtyard View
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between pb-1">
-                      <FormLabel className="text-xs font-semibold">
-                        Description
-                      </FormLabel>
-                      <AiDescriptionButton
-                        name={form.watch("name") || "Hotel Room"}
-                        serviceType="hotel room"
-                        amenities={selectedAmenities}
-                        context={`Size: ${form.watch("roomSizeSqm")} sqm, View: ${form.watch("viewType")}, Capacity: ${form.watch("capacity.adults")} adults`}
-                        currentDescription={field.value}
-                        onGenerated={(aiText) =>
-                          form.setValue("description", aiText, {
-                            shouldValidate: true,
-                            shouldDirty: true,
-                          })
-                        }
-                      />
-                    </div>
-                    <FormControl>
-                      <Textarea
-                        rows={3}
-                        placeholder="Detailed room features, views, and unique offerings..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                <span>Basic & Pricing</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="images"
+                className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+              >
+                <UploadCloud className="h-4 w-4 text-primary" />
+                <span>Room Photos</span>
+                {images.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                    {images.length}
+                  </Badge>
                 )}
-              />
-
-              <div className="flex items-center gap-3 pt-2">
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="text-xs font-semibold cursor-pointer">
-                        Active for public booking
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pricing & Inventory */}
-          <Card className="rounded-2xl border-border/80 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Maximize2 className="h-4 w-4 text-primary" />
-                Pricing & Inventory
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="basePrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Base Price (₹/night)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="discountPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Discounted Price (₹)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Optional"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="totalRooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Total Inventory
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="roomSizeSqm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Size (Sqm)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Capacity & Beds */}
-          <Card className="rounded-2xl border-border/80 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
+              </TabsTrigger>
+              <TabsTrigger
+                value="capacity"
+                className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+              >
                 <Users className="h-4 w-4 text-primary" />
-                Capacity & Beds
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
-                <FormField
-                  control={form.control}
-                  name="capacity.adults"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Adults Max
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <span>Capacity & Beds</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="amenities"
+                className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Amenities</span>
+                {selectedAmenities.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                    {selectedAmenities.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-                <FormField
-                  control={form.control}
-                  name="capacity.children"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">
-                        Children Max
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Bed Arrangements
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => appendBed({ type: "double", quantity: 1 })}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Bed
-                  </Button>
-                </div>
-
-                {bedFields.map((fieldItem, index) => (
-                  <div key={fieldItem.id} className="flex items-center gap-3">
+            {/* ── Basic Details & Pricing Tab ─────────────────── */}
+            <TabsContent value="basic" className="space-y-6 pt-2">
+              <Card className="rounded-2xl border-border/80 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <Hotel className="h-4 w-4 text-primary" />
+                    Basic Details
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Title, descriptions, and operational room status.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name={`beds.${index}.type`}
+                      name="name"
                       render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Bed Type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="king">King Bed</SelectItem>
-                              <SelectItem value="queen">Queen Bed</SelectItem>
-                              <SelectItem value="double">Double Bed</SelectItem>
-                              <SelectItem value="single">Single Bed</SelectItem>
-                              <SelectItem value="twin">Twin Beds</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Room Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Deluxe Ocean View Suite"
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -676,13 +455,119 @@ export default function EditRoomPage() {
 
                     <FormField
                       control={form.control}
-                      name={`beds.${index}.quantity`}
+                      name="viewType"
                       render={({ field }) => (
-                        <FormItem className="w-28">
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            View Type
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || "none"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select view type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">None / Standard</SelectItem>
+                              <SelectItem value="city">City View</SelectItem>
+                              <SelectItem value="garden">Garden View</SelectItem>
+                              <SelectItem value="sea">Sea / Ocean View</SelectItem>
+                              <SelectItem value="mountain">
+                                Mountain View
+                              </SelectItem>
+                              <SelectItem value="pool">Pool View</SelectItem>
+                              <SelectItem value="courtyard">
+                                Courtyard View
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between pb-1">
+                          <FormLabel className="text-xs font-semibold">
+                            Description
+                          </FormLabel>
+                          <AiDescriptionButton
+                            name={form.watch("name") || "Hotel Room"}
+                            serviceType="hotel room"
+                            amenities={selectedAmenities}
+                            context={`Size: ${form.watch("roomSizeSqm")} sqm, View: ${form.watch("viewType")}, Capacity: ${form.watch("capacity.adults")} adults`}
+                            currentDescription={field.value}
+                            onGenerated={(aiText) =>
+                              form.setValue("description", aiText, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
+                          />
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            rows={3}
+                            placeholder="Detailed room features, views, and unique offerings..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <FormField
+                      control={form.control}
+                      name="isActive"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-xs font-semibold cursor-pointer">
+                            Active for public booking
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pricing & Inventory */}
+              <Card className="rounded-2xl border-border/80 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <Maximize2 className="h-4 w-4 text-primary" />
+                    Pricing & Inventory
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="basePrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Base Price (₹/night)
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
-                              min={1}
                               {...field}
                               onChange={(e) =>
                                 field.onChange(Number(e.target.value))
@@ -694,170 +579,393 @@ export default function EditRoomPage() {
                       )}
                     />
 
-                    {bedFields.length > 1 && (
+                    <FormField
+                      control={form.control}
+                      name="discountPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Discounted Price (₹)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Optional"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="totalRooms"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Total Inventory
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="roomSizeSqm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Size (Sqm)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── Room Photos Tab ─────────────────────────────── */}
+            <TabsContent value="images" className="space-y-4 pt-2">
+              <RoomImageArranger
+                images={images}
+                onChange={(newImages) =>
+                  form.setValue("images", newImages, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                onUpload={handleImageUpload}
+                onRemove={removeImage}
+                uploading={uploading}
+                errorMessage={form.formState.errors.images?.message}
+              />
+            </TabsContent>
+
+            {/* ── Capacity & Beds Tab ─────────────────────────── */}
+            <TabsContent value="capacity" className="space-y-4 pt-2">
+              <Card className="rounded-2xl border-border/80 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    Capacity & Beds
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+                    <FormField
+                      control={form.control}
+                      name="capacity.adults"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Adults Max
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="capacity.children"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">
+                            Children Max
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Bed Arrangements
+                      </Label>
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive h-9 w-9"
-                        onClick={() => removeBed(index)}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs gap-1.5"
+                        onClick={() => appendBed({ type: "double", quantity: 1 })}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Bed
                       </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    </div>
 
-          {/* Gallery Images with Index Arrangement & Live Preview */}
-          <RoomImageArranger
-            images={images}
-            onChange={(newImages) =>
-              form.setValue("images", newImages, {
-                shouldValidate: true,
-                shouldDirty: true,
-              })
-            }
-            onUpload={handleImageUpload}
-            onRemove={removeImage}
-            uploading={uploading}
-            errorMessage={form.formState.errors.images?.message}
-          />
-
-          {/* Amenities Selection */}
-          <Card className="rounded-2xl border-border/80 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    Room Amenities & Features
-                    {selectedAmenities.length > 0 && (
-                      <Badge variant="outline" className="text-[10px] font-semibold">
-                        {selectedAmenities.length} selected
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Choose verified hotel amenities or add custom room features below.
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Filter amenities..."
-                    value={amenitySearch}
-                    onChange={(e) => setAmenitySearch(e.target.value)}
-                    className="max-w-[180px] text-xs h-8"
-                  />
-                </div>
-              </div>
-
-              {/* Custom Amenity Adder */}
-              <div className="flex items-center gap-2 max-w-sm pt-2">
-                <Input
-                  placeholder="Add custom room amenity (e.g. jacuzzi)..."
-                  value={customAmenityInput}
-                  onChange={(e) => setCustomAmenityInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddCustomAmenity();
-                    }
-                  }}
-                  className="text-xs h-8"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddCustomAmenity}
-                  className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add Custom
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-64 overflow-y-auto pr-2">
-                {allAvailableAmenities
-                  .filter((a) =>
-                    a.toLowerCase().includes(amenitySearch.toLowerCase()),
-                  )
-                  .map((amenity) => {
-                    const isChecked = selectedAmenities.includes(amenity);
-                    const isCustom = !availableAmenities.includes(amenity);
-                    return (
-                      <label
-                        key={amenity}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${
-                          isChecked
-                            ? "bg-primary/10 border-primary/40 text-primary font-semibold"
-                            : "bg-card border-border hover:bg-muted/40 text-foreground"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              form.setValue("amenities", [
-                                ...selectedAmenities,
-                                amenity,
-                              ]);
-                            } else {
-                              form.setValue(
-                                "amenities",
-                                selectedAmenities.filter((a) => a !== amenity),
-                              );
-                            }
-                          }}
+                    {bedFields.map((fieldItem, index) => (
+                      <div key={fieldItem.id} className="flex items-center gap-3">
+                        <FormField
+                          control={form.control}
+                          name={`beds.${index}.type`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Bed Type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="king">King Bed</SelectItem>
+                                  <SelectItem value="queen">Queen Bed</SelectItem>
+                                  <SelectItem value="double">Double Bed</SelectItem>
+                                  <SelectItem value="single">Single Bed</SelectItem>
+                                  <SelectItem value="twin">Twin Beds</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                        <span className="capitalize truncate">
-                          {amenity.replace(/_/g, " ")}
-                        </span>
-                        {isCustom && (
-                          <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-4 uppercase font-semibold">
-                            Custom
+
+                        <FormField
+                          control={form.control}
+                          name={`beds.${index}.quantity`}
+                          render={({ field }) => (
+                            <FormItem className="w-28">
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {bedFields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive h-9 w-9"
+                            onClick={() => removeBed(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── Amenities Tab ───────────────────────────────── */}
+            <TabsContent value="amenities" className="space-y-4 pt-2">
+              <Card className="rounded-2xl border-border/80 shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base font-bold flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Room Amenities & Features
+                        {selectedAmenities.length > 0 && (
+                          <Badge variant="outline" className="text-[10px] font-semibold">
+                            {selectedAmenities.length} selected
                           </Badge>
                         )}
-                      </label>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Choose verified hotel amenities or add custom room features below.
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Filter amenities..."
+                        value={amenitySearch}
+                        onChange={(e) => setAmenitySearch(e.target.value)}
+                        className="max-w-[180px] text-xs h-8"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Custom Amenity Adder */}
+                  <div className="flex items-center gap-2 max-w-sm pt-2">
+                    <Input
+                      placeholder="Add custom room amenity (e.g. jacuzzi)..."
+                      value={customAmenityInput}
+                      onChange={(e) => setCustomAmenityInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomAmenity();
+                        }
+                      }}
+                      className="text-xs h-8"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddCustomAmenity}
+                      className="text-xs h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Custom
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-64 overflow-y-auto pr-2">
+                    {allAvailableAmenities
+                      .filter((a) =>
+                        a.toLowerCase().includes(amenitySearch.toLowerCase()),
+                      )
+                      .map((amenity) => {
+                        const isChecked = selectedAmenities.includes(amenity);
+                        const isCustom = !availableAmenities.includes(amenity);
+                        return (
+                          <label
+                            key={amenity}
+                            className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${
+                              isChecked
+                                ? "bg-primary/10 border-primary/40 text-primary font-semibold"
+                                : "bg-card border-border hover:bg-muted/40 text-foreground"
+                            }`}
+                          >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  form.setValue("amenities", [
+                                    ...selectedAmenities,
+                                    amenity,
+                                  ]);
+                                } else {
+                                  form.setValue(
+                                    "amenities",
+                                    selectedAmenities.filter((a) => a !== amenity),
+                                  );
+                                }
+                              }}
+                            />
+                            <span className="capitalize truncate">
+                              {amenity.replace(/_/g, " ")}
+                            </span>
+                            {isCustom && (
+                              <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-4 uppercase font-semibold">
+                                Custom
+                              </Badge>
+                            )}
+                          </label>
+                        );
+                      })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Submit Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/rooms")}
-              disabled={isSubmitting}
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isSubmitting || deleteRoomMutation.isPending}
+              className="text-destructive hover:bg-destructive/10 border-destructive/30"
             >
-              Cancel
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete Room
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || uploading}
-              className="min-w-[140px]"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/rooms")}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || uploading}
+                className="min-w-[140px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteRoom}
+        serviceName={form.watch("name") || "room"}
+        isLoading={deleteRoomMutation.isPending}
+      />
     </div>
   );
 }

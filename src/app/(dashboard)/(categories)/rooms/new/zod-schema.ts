@@ -33,9 +33,17 @@ export const NewRoomSchema = z
     totalRooms: z.number().min(1, "Total rooms is required"),
     isActive: z.boolean(),
   })
-  .refine((data) => data.discountPrice < data.basePrice, {
-    message: "Discount price must be less than base price",
-    path: ["discountPrice"],
-  });
+  .refine(
+    (data) => {
+      const discount = Number(data.discountPrice || 0);
+      const base = Number(data.basePrice || 0);
+      if (discount === 0) return true;
+      return discount <= base;
+    },
+    {
+      message: "Discounted price cannot be greater than base price",
+      path: ["discountPrice"],
+    }
+  );
 
 export type NewRoomProps = z.infer<typeof NewRoomSchema>;

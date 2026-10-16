@@ -31,13 +31,16 @@ import {
   Eye,
   Hotel,
   ImageIcon,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageSkeleton } from "./details.skeleton";
-import { useAllRooms, useRoomById } from "@/services/tanstack.query";
+import { useAllRooms, useRoomById, useDeleteRoomType } from "@/services/tanstack.query";
 import { EditRoom } from "./edit-room-sheet";
 import AddRoomForm from "../new/page";
 import { ImagePreview } from "@/components/ui/image-preview";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
+import { toast } from "sonner";
 
 export type BedType = {
   _id?: string;
@@ -128,6 +131,25 @@ export function RoomListing() {
   const { data, isLoading } = useAllRooms();
   const [loading, setLoading] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const [roomToDelete, setRoomToDelete] = React.useState<{ id: string; name: string } | null>(null);
+  const deleteRoomMutation = useDeleteRoomType();
+
+  const handleDeleteConfirm = () => {
+    if (!roomToDelete) return;
+    deleteRoomMutation.mutate(roomToDelete.id, {
+      onSuccess: (res: any) => {
+        toast.success(res?.message || "Room deleted successfully");
+        if (roomselected === roomToDelete.id) {
+          setRoomSelected(null);
+        }
+        setRoomToDelete(null);
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.message || err?.message || "Failed to delete room");
+      },
+    });
+  };
+
   // Specify that the ref will point to an HTML element
   const targetSectionRef = React.useRef<HTMLDivElement>(null);
 
@@ -386,20 +408,34 @@ export function RoomListing() {
                       </div>
                     )}
 
-                    {/* Action Buttons: Edit Listing & Details */}
-                    <div className="mt-3 pt-3 flex items-center justify-between border-t border-dashed">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/rooms/${room.id}/edit`);
-                        }}
-                        className="rounded-xl text-xs gap-1.5 h-8 font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit Listing
-                      </Button>
+                    {/* Action Buttons: Edit Listing, Delete & Details */}
+                    <div className="mt-3 pt-3 flex items-center justify-between border-t border-dashed gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/rooms/${room.id}/edit`);
+                          }}
+                          className="rounded-xl text-xs gap-1.5 h-8 font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit Listing
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRoomToDelete({ id: room.id, name: room.name });
+                          }}
+                          className="rounded-xl text-xs gap-1.5 h-8 font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
 
                       <Button
                         variant="secondary"
@@ -409,7 +445,7 @@ export function RoomListing() {
                           setRoomSelected(room.id);
                           setEditMode({ id: room.id, mode: false });
                         }}
-                        className="rounded-full text-xs h-8"
+                        className="rounded-full text-xs h-8 shrink-0"
                       >
                         Details
                         <ChevronRight className="ml-1 h-3.5 w-3.5" />
@@ -431,6 +467,7 @@ export function RoomListing() {
                 <RoomSideBarDetails
                   editmode={editmode}
                   setEditMode={setEditMode}
+                  onDelete={(id, name) => setRoomToDelete({ id, name })}
                 />
               )
             ) : (
@@ -444,6 +481,14 @@ export function RoomListing() {
           </div>
         </section>
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={!!roomToDelete}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        serviceName={roomToDelete?.name || "Room"}
+        isLoading={deleteRoomMutation.isPending}
+      />
     </div>
   );
 }
@@ -533,12 +578,15 @@ export type RoomImage = {
 const RoomSideBarDetails = ({
   editmode,
   setEditMode,
+  onDelete,
 }: {
   editmode: { id: string; mode: boolean };
   setEditMode: React.Dispatch<
     React.SetStateAction<{ id: string; mode: boolean }>
   >;
+  onDelete?: (id: string, name: string) => void;
 }) => {
+  const router = useRouter();
   const { data: user } = useCurrentUser();
 
   const { data, isLoading, error } = useRoomById(editmode.id);
@@ -563,10 +611,30 @@ const RoomSideBarDetails = ({
   return (
     <Card className="overflow-hidden shadow-md">
       {/* Header */}
-      <div className="flex justify-between px-6 pt-4">
+      <div className="flex justify-between items-center px-6 pt-4">
         <h1 className="text-sm font-medium text-muted-foreground">
           Room Details
         </h1>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push(`/rooms/${room.id || editmode.id}/edit`)}
+            className="rounded-xl text-xs gap-1 h-7.5"
+          >
+            <Pencil className="h-3 w-3" />
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => onDelete?.(room.id || editmode.id, room.name)}
+            className="rounded-xl text-xs gap-1 h-7.5"
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete
+          </Button>
+        </div>
       </div>
 
       <CardHeader className="pb-4">

@@ -65,7 +65,7 @@ interface VendorData {
     id: string;
     name: string;
     description: string;
-    address: string;
+    address: string | any;
     city: string | null;
     rating: number;
     verificationStatus: string;
@@ -702,6 +702,30 @@ function ListingPage() {
     return String(duration);
   };
 
+  const formatAddress = (addr: any, city?: string | null) => {
+    if (!addr) return city || "Address not provided";
+    if (typeof addr === "string") {
+      return city && !addr.toLowerCase().includes(city.toLowerCase())
+        ? `${addr}, ${city}`
+        : addr;
+    }
+    if (typeof addr === "object") {
+      if (addr.formattedAddress) return addr.formattedAddress;
+      const parts = [
+        addr.buildingName,
+        addr.doorNumber,
+        addr.streetAddress,
+        addr.areaName,
+        addr.city || city,
+        addr.district,
+        addr.state,
+        addr.country,
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(", ") : city || "Address not provided";
+    }
+    return String(addr);
+  };
+
   return (
     <div className="py-2 px-2 sm:px-2 lg:px-3 w-full mx-auto min-h-screen flex flex-col gap-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-6">
@@ -784,8 +808,7 @@ function ListingPage() {
                 <div className="flex items-start gap-2 text-zinc-500 dark:text-zinc-400 text-sm mt-2">
                   <MapPin className="h-4 w-4 text-zinc-400 shrink-0 mt-0.5" />
                   <span>
-                    {serviceDetails.address}
-                    {serviceDetails.city ? `, ${serviceDetails.city}` : ""}
+                    {formatAddress(serviceDetails.address, serviceDetails.city)}
                   </span>
                 </div>
               </div>

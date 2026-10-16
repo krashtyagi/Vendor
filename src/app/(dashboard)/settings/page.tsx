@@ -22,6 +22,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -75,13 +81,29 @@ interface LocationHistoryItem {
   changedAt?: string | Date;
 }
 
+interface AddressDetails {
+  formattedAddress?: string;
+  streetAddress?: string;
+  buildingName?: string;
+  doorNumber?: string;
+  areaName?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  landmark?: string;
+  directions?: string;
+  [key: string]: any;
+}
+
 interface PropertySettingsData {
   serviceType: string;
   propertyId: string;
   name: string;
   description: string;
-  address: string;
-  addressDetails?: any;
+  address: string | AddressDetails;
+  addressDetails?: AddressDetails | null;
   buildingName?: string;
   doorNumber?: string;
   areaName?: string;
@@ -217,17 +239,25 @@ export default function PropertySettingsPage() {
         setName(d.name || "");
         setServiceType(d.serviceType || "");
         setDescription(d.description || "");
-        setAddress(d.address || "");
-        setBuildingName(d.buildingName || "");
-        setDoorNumber(d.doorNumber || "");
-        setAreaName(d.areaName || "");
-        setDistrict(d.district || "");
-        setCity(d.city || "");
-        setState(d.state || "");
-        setPostalCode(d.postalCode || "");
-        setCountry(d.country || "India");
-        setLandmark(d.landmark || "");
-        setDirections(d.directions || "");
+        const addrObj: AddressDetails | null =
+          typeof d.address === "object" && d.address !== null
+            ? d.address
+            : (d.addressDetails as AddressDetails | null | undefined) ?? null;
+        setAddress(
+          typeof d.address === "string"
+            ? d.address
+            : addrObj?.formattedAddress || addrObj?.streetAddress || d.formattedAddress || ""
+        );
+        setBuildingName(d.buildingName || addrObj?.buildingName || "");
+        setDoorNumber(d.doorNumber || addrObj?.doorNumber || "");
+        setAreaName(d.areaName || addrObj?.areaName || "");
+        setDistrict(d.district || addrObj?.district || "");
+        setCity(d.city || addrObj?.city || "");
+        setState(d.state || addrObj?.state || "");
+        setPostalCode(d.postalCode || addrObj?.postalCode || "");
+        setCountry(d.country || addrObj?.country || "India");
+        setLandmark(d.landmark || addrObj?.landmark || "");
+        setDirections(d.directions || addrObj?.directions || "");
 
         if (
           d.buildingName ||
@@ -558,18 +588,58 @@ export default function PropertySettingsPage() {
         </Button>
       </div>
 
-      {/* ── 1. Promotional Advertisement Banner ────────────────────────── */}
-      <AdvertisementBannerSection
-        propertyName={name}
-        serviceType={serviceType}
-        city={city}
-        initialAdImage={adImage}
-        fallbackImageUrl={images[0]?.url || null}
-        onUpdated={(newImg) => setAdImage(newImg as any)}
-      />
+      <Tabs defaultValue="overview" className="w-full space-y-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-muted/60 rounded-2xl border border-border/60 gap-1.5">
+          <TabsTrigger
+            value="overview"
+            className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+          >
+            <Building className="h-4 w-4 text-primary" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="location"
+            className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+          >
+            <MapPin className="h-4 w-4 text-primary" />
+            <span>Location & GPS</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="photos"
+            className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+          >
+            <UploadCloud className="h-4 w-4 text-primary" />
+            <span>Photos</span>
+            {images.length > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                {images.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="amenities"
+            className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span>Amenities</span>
+            {amenities.length > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                {amenities.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="banner"
+            className="rounded-xl py-2 px-3 text-xs font-semibold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer"
+          >
+            <Tag className="h-4 w-4 text-primary" />
+            <span>Promo Banner</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* ── 2. Description ─────────────────────────────────────────────── */}
-      <Card className="rounded-2xl border-border/80 shadow-sm">
+        {/* ── 1. Property Overview Tab ─────────────────────────── */}
+        <TabsContent value="overview" className="space-y-6 pt-2">
+          <Card className="rounded-2xl border-border/80 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
@@ -605,8 +675,10 @@ export default function PropertySettingsPage() {
           />
         </CardContent>
       </Card>
+    </TabsContent>
 
-      {/* ── 3. Interactive Leaflet Map & Location ──────────────────────── */}
+    {/* ── 2. Interactive Leaflet Map & Location Tab ──────── */}
+    <TabsContent value="location" className="space-y-6 pt-2">
       <Card className="rounded-2xl border-border/80 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -792,8 +864,10 @@ export default function PropertySettingsPage() {
           </div>
         </CardContent>
       </Card>
+    </TabsContent>
 
-      {/* ── 4. Property Photos Gallery & Arranger ────────────────────────── */}
+    {/* ── 3. Property Photos Gallery Tab ───────────────── */}
+    <TabsContent value="photos" className="space-y-4 pt-2">
       <HotelImageArranger
         images={images}
         onChange={(updated) => setImages(updated)}
@@ -803,8 +877,10 @@ export default function PropertySettingsPage() {
         uploading={uploadingImages}
         propertyName={name}
       />
+    </TabsContent>
 
-      {/* ── 5. Amenities with icons.tsx ─────────────────────────────────── */}
+    {/* ── 4. Property Amenities Tab ─────────────────────── */}
+    <TabsContent value="amenities" className="space-y-4 pt-2">
       <Card className="rounded-2xl border-border/80 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -962,8 +1038,22 @@ export default function PropertySettingsPage() {
           </div>
         </CardContent>
       </Card>
+    </TabsContent>
 
-      {/* ── Location History Dialog ─────────────────────────────────────── */}
+    {/* ── 5. Promotional Advertisement Banner Tab ────────── */}
+    <TabsContent value="banner" className="space-y-4 pt-2">
+      <AdvertisementBannerSection
+        propertyName={name}
+        serviceType={serviceType}
+        city={city}
+        initialAdImage={adImage}
+        fallbackImageUrl={images[0]?.url || null}
+        onUpdated={(newImg) => setAdImage(newImg as any)}
+      />
+    </TabsContent>
+  </Tabs>
+
+  {/* ── Location History Dialog ─────────────────────────────────────── */}
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
         <DialogContent className="max-w-2xl bg-card border rounded-3xl p-6 shadow-2xl">
           <DialogHeader className="border-b pb-3">

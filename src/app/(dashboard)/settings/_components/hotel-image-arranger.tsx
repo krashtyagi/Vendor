@@ -370,7 +370,7 @@ export function HotelImageArranger({
                         <button
                           type="button"
                           onClick={() => setSelectedImageModal(img.url)}
-                          className="absolute bottom-2 left-2 p-1.5 rounded-md bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+                          className="absolute bottom-2 left-2 p-1.5 rounded-md bg-black/60 backdrop-blur-sm text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-black/80"
                           title="View enlarged"
                         >
                           <Maximize2 className="h-3 w-3" />
@@ -380,7 +380,7 @@ export function HotelImageArranger({
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(index)}
-                          className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 backdrop-blur-sm text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
                           title="Delete photo"
                         >
                           <Trash2 className="h-3 w-3" />
