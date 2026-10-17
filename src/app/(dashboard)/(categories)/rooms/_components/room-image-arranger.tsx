@@ -215,9 +215,12 @@ export function RoomImageArranger<T extends RoomImageItem = RoomImageItem>({
                       {/* Delete button */}
                       <button
                         type="button"
-                        onClick={() => onRemove(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemove(index);
+                        }}
                         title="Remove"
-                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 sm:bg-black/50 hover:bg-red-600 text-white transition-colors cursor-pointer opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-red-600 text-white transition-colors cursor-pointer z-10 shadow-sm"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
