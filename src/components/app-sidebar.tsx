@@ -35,6 +35,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import LOGO from "./logo/logo"
+import { PropertySwitcher } from "./property-switcher"
 import { usePathname } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -128,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="p-1.5">
+            <SidebarMenuButton asChild className="p-1.5 hover:bg-transparent">
               <React.Suspense fallback={<div><Loader2 className="animate-spin" /></div>}>
                 <LOGO />
               </React.Suspense>
@@ -141,7 +142,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={activeNavigationItems} />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="gap-2 p-2">
+        <PropertySwitcher />
+        <div className="w-full border-t border-sidebar-border/60 my-0.5" />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

@@ -146,7 +146,10 @@ export const multiverndorservice = async () => {
     return error;
   }
 };
-export const getDashboard = async (params?: { reservationDays?: number }) => {
+export const getDashboard = async (params?: {
+  reservationDays?: number;
+  propertyId?: string;
+}) => {
   try {
     const res = await axiosApi.get(`/vendors/dashboard`, { params });
 

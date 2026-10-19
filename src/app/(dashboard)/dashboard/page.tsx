@@ -11,6 +11,7 @@ import { RatingAndTasks } from "./_components/tasks";
 import { useGetDashboard } from "@/services/tanstack.query";
 import { useChartRanges } from "@/context/auth/ChartRangesProvider";
 import { MultiServiceDashboard } from "./_components/MultiServiceDashboard";
+import { useVendorProperties } from "@/services/property.query";
 
 export type DashboardData = {
   stats: Stats;
@@ -57,7 +58,9 @@ type Props = {};
 
 const HotelDashboardContainer = () => {
   const { reservationDays } = useChartRanges();
-  const { data: s, isLoading } = useGetDashboard(reservationDays);
+  const { data: propertiesData } = useVendorProperties();
+  const activePropertyId = propertiesData?.data?.activePropertyId;
+  const { data: s, isLoading } = useGetDashboard(reservationDays, activePropertyId);
 
   if (isLoading) return <PageSkeleton />;
 
@@ -71,7 +74,7 @@ const HotelDashboardContainer = () => {
     <div className="md:flex-row flex flex-col gap-2 ">
       <div className="w-full space-y-2 ">
         <SectionCards dash={dash} />
-        <HotelDashboard reservationDays={reservationDays} />
+        <HotelDashboard reservationDays={reservationDays} activePropertyId={activePropertyId} />
       </div>
       <div className="min-w-[300px]">
         <RatingAndTasks />

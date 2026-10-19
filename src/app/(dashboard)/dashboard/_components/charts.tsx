@@ -43,8 +43,14 @@ const platformData = [
   { name: 'Others', value: 2, color: '#F0FDF4' },
 ];
 
-export function HotelDashboard({ reservationDays }: { reservationDays: number | undefined }) {
-  const { data: s, isLoading } = useGetDashboard(reservationDays);
+export function HotelDashboard({
+  reservationDays,
+  activePropertyId,
+}: {
+  reservationDays: number | undefined;
+  activePropertyId?: string;
+}) {
+  const { data: s, isLoading } = useGetDashboard(reservationDays, activePropertyId);
 
   if (isLoading) return <PageSkeleton />;
 

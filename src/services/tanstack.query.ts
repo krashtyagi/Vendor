@@ -201,10 +201,13 @@ export const useGetConnectedAccounts = () => {
     enabled: !!vendorId,
   });
 };
-export const useGetDashboard = (reservationDays?: number) => {
+export const useGetDashboard = (
+  reservationDays?: number,
+  propertyId?: string,
+) => {
   return useQuery({
-    queryKey: ["user-getDashboard"],
-    queryFn: () => getDashboard({ reservationDays }),
+    queryKey: ["user-getDashboard", propertyId, reservationDays],
+    queryFn: () => getDashboard({ reservationDays, propertyId }),
     staleTime: 10000,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
