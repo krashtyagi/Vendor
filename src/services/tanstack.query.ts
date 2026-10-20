@@ -72,8 +72,12 @@ export const useDeleteAdventureService = () => {
   return useMutation({
     mutationFn: deleteAdventureService,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-getAdventuresServices"] });
-      queryClient.invalidateQueries({ queryKey: ["user-getAdventureServiceDetailsById"] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-getAdventuresServices"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["user-getAdventureServiceDetailsById"],
+      });
     },
   });
 };
@@ -256,8 +260,8 @@ export const useAllRooms = () => {
   return useQuery({
     queryKey: ["vendor-getRooms", hotelId],
     queryFn: () => getRooms(hotelId),
-    staleTime: 200000,
-    refetchOnWindowFocus: false,
+    staleTime: 20000,
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
     retry: false,

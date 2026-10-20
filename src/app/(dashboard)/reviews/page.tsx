@@ -37,6 +37,7 @@ const ReviewsPageContent = () => {
           averageRating={summary.averageRating}
           totalReviews={summary.totalReviews}
           comments={comments}
+          breakdown={summary.breakdown}
         />
       </div>
       <CustomerReviewsSection comments={comments} />

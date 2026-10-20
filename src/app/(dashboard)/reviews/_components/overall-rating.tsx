@@ -21,37 +21,28 @@ export function OverallRating({
   averageRating = 0,
   totalReviews = 0,
   comments = [],
+  breakdown,
 }: {
   averageRating?: number
   totalReviews?: number
   comments?: any[]
+  breakdown?: {
+    facilities: number
+    cleanliness: number
+    services: number
+    comfort: number
+    location: number
+  }
 }) {
   const chartData = [{ name: "Rating", value: averageRating }]
 
-  // Calculate breakdown averages based on overall ratings
-  const breakdown = {
-    cleanliness: 0,
-    communication: 0,
-    location: 0,
-    value: 0
-  }
-
-  let countWithBreakdown = 0
-  comments.forEach((review: any) => {
-    const r = review.rating || 0
-    breakdown.cleanliness += r
-    breakdown.communication += r
-    breakdown.location += r
-    breakdown.value += r
-    countWithBreakdown++
-  })
-
-  const averages = {
-    cleanliness: countWithBreakdown ? Number((breakdown.cleanliness / countWithBreakdown).toFixed(1)) : 0,
-    communication: countWithBreakdown ? Number((breakdown.communication / countWithBreakdown).toFixed(1)) : 0,
-    location: countWithBreakdown ? Number((breakdown.location / countWithBreakdown).toFixed(1)) : 0,
-    value: countWithBreakdown ? Number((breakdown.value / countWithBreakdown).toFixed(1)) : 0,
-  }
+  const ratingCategories = [
+    { key: "facilities" as const, label: "Facilities" },
+    { key: "cleanliness" as const, label: "Cleanliness" },
+    { key: "services" as const, label: "Services" },
+    { key: "comfort" as const, label: "Comfort" },
+    { key: "location" as const, label: "Location" },
+  ]
 
   // Determine an adjective matching the rating
   let ratingAdjective = "Excellent"
@@ -66,9 +57,6 @@ export function OverallRating({
     <Card className="max-w-full rounded-2xl shadow-sm border bg-card text-card-foreground overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-bold tracking-tight">Overall Rating</CardTitle>
-        {/* <Button variant="secondary" size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-white rounded-lg gap-1 px-3">
-          This Week <ChevronDown className="h-3 w-3" />
-        </Button> */}
       </CardHeader>
 
       <CardContent className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4 items-start pt-2">
@@ -79,7 +67,7 @@ export function OverallRating({
               data={chartData}
               startAngle={180}
               endAngle={0}
-              innerRadius={55}   /* Smaller radius to fit side-by-side */
+              innerRadius={55}
               outerRadius={85}
               barSize={15}
             >
@@ -120,7 +108,7 @@ export function OverallRating({
             </RadialBarChart>
           </ChartContainer>
 
-          {/* Purple Summary Block matching image */}
+          {/* Purple Summary Block */}
           <div className="w-full bg-violet-600 text-white p-3 rounded-xl text-center shadow-md">
             <p className="text-lg font-bold">{ratingAdjective}</p>
             <p className="text-[10px] opacity-80 font-medium tracking-wide">from {totalReviews} reviews</p>
@@ -129,10 +117,10 @@ export function OverallRating({
 
         {/* Right Side: Linear Progress Bars */}
         <div className="space-y-4 pt-4">
-          <RatingRow label="Cleanliness" score={averages.cleanliness} value={averages.cleanliness * 20} />
-          <RatingRow label="Communication" score={averages.communication} value={averages.communication * 20} />
-          <RatingRow label="Location" score={averages.location} value={averages.location * 20} />
-          <RatingRow label="Value" score={averages.value} value={averages.value * 20} />
+          {ratingCategories.map(({ key, label }) => {
+            const score = breakdown?.[key] || 0
+            return <RatingRow key={key} label={label} score={score} value={score * 20} />
+          })}
         </div>
       </CardContent>
     </Card>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -72,6 +73,7 @@ export const availableAmenities = Object.keys(amenityIconMap);
 export default function EditRoomPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const rawId = params?.id;
   const roomId = Array.isArray(rawId) ? rawId[0] : rawId || "";
 
@@ -285,6 +287,9 @@ export default function EditRoomPage() {
 
       const res = await updateRoomType(roomId, payload);
       if (res?.success || res?.status === 200 || res?.data) {
+        queryClient.invalidateQueries({ queryKey: ["user-getDashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["vendor-roomTypes"] });
+        queryClient.invalidateQueries({ queryKey: ["user-getCalender"] });
         toast.success("Room type updated successfully!");
         router.push("/rooms");
       } else {

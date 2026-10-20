@@ -12,6 +12,11 @@ import { useGetDashboard } from "@/services/tanstack.query";
 import { useChartRanges } from "@/context/auth/ChartRangesProvider";
 import { MultiServiceDashboard } from "./_components/MultiServiceDashboard";
 import { useVendorProperties } from "@/services/property.query";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export type DashboardData = {
   stats: Stats;
@@ -60,7 +65,28 @@ const HotelDashboardContainer = () => {
   const { reservationDays } = useChartRanges();
   const { data: propertiesData } = useVendorProperties();
   const activePropertyId = propertiesData?.data?.activePropertyId;
-  const { data: s, isLoading } = useGetDashboard(reservationDays, activePropertyId);
+  const { data: s, isLoading, refetch, isRefetching } = useGetDashboard(reservationDays, activePropertyId);
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["user-getDashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["vendor-properties"] }),
+        queryClient.invalidateQueries({ queryKey: ["vendor-roomTypes"] }),
+        queryClient.invalidateQueries({ queryKey: ["vendor-getRooms"] }),
+        queryClient.invalidateQueries({ queryKey: ["vendorReviews"] }),
+        refetch(),
+      ]);
+      toast.success("Dashboard refreshed successfully!");
+    } catch (err) {
+      toast.error("Failed to refresh dashboard");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (isLoading) return <PageSkeleton />;
 
@@ -70,9 +96,27 @@ const HotelDashboardContainer = () => {
     revenueChart: [],
   };
 
+  const isBusy = refreshing || isRefetching;
+
   return (
     <div className="md:flex-row flex flex-col gap-2 ">
       <div className="w-full space-y-2 ">
+        <div className="flex items-center justify-between pb-1 px-0.5">
+          <div>
+            <h2 className="text-base font-bold text-foreground tracking-tight">Overview & Live Stats</h2>
+            <p className="text-xs text-muted-foreground">Real-time room occupancy, arrivals, and revenue metrics</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isBusy}
+            className="gap-2 h-8 text-xs font-semibold rounded-xl border border-border/70 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isBusy && "animate-spin text-primary")} />
+            {isBusy ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
         <SectionCards dash={dash} />
         <HotelDashboard reservationDays={reservationDays} activePropertyId={activePropertyId} />
       </div>

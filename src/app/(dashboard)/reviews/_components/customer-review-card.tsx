@@ -126,6 +126,32 @@ export function CustomerReviewCard({ review }: { review: any }) {
           <p className="text-xs leading-relaxed text-muted-foreground">
             &quot;{review.comment || "No comment left."}&quot;
           </p>
+
+          {/* Breakdown Ratings */}
+          {review.breakdown && (
+            <div className="grid grid-cols-5 gap-1 py-1.5 px-2 bg-muted/40 rounded-lg text-center">
+              <div>
+                <span className="block text-[9px] text-muted-foreground">Fac</span>
+                <span className="font-semibold text-[11px] text-foreground">{review.breakdown.facilities || "—"}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] text-muted-foreground">Clean</span>
+                <span className="font-semibold text-[11px] text-foreground">{review.breakdown.cleanliness || "—"}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] text-muted-foreground">Serv</span>
+                <span className="font-semibold text-[11px] text-foreground">{review.breakdown.services || "—"}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] text-muted-foreground">Comf</span>
+                <span className="font-semibold text-[11px] text-foreground">{review.breakdown.comfort || "—"}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] text-muted-foreground">Loc</span>
+                <span className="font-semibold text-[11px] text-foreground">{review.breakdown.location || "—"}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 pt-3 border-t">

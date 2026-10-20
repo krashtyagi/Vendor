@@ -1,20 +1,15 @@
 "use client";
+import React, { useState, ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus } from "lucide-react";
 import { TaskForm } from "./taskform";
 import { useGetTasks } from "@/services/tanstack.query";
 import { format } from "date-fns";
-const ratings = [
-  { label: "Facilities", score: 4.4, percentage: 88 },
-  { label: "Cleanliness", score: 4.7, percentage: 94 },
-  { label: "Services", score: 4.6, percentage: 92 },
-  { label: "Comfort", score: 4.8, percentage: 96 },
-  { label: "Location", score: 4.5, percentage: 90 },
-];
+import Link from "next/link";
+import { useGetVendorReviews } from "../../reviews/hooks/useVendorReviews";
 
 export interface ITask {
   _id: string;
@@ -32,6 +27,39 @@ export function RatingAndTasks() {
   const [checking, setChecking] = useState(false);
   const { data: t, isLoading: taskLoading, refetch, isRefetching } = useGetTasks();
   const tasks: ITask[] = t?.data || [];
+
+  const { data: reviewsResponse, isLoading: reviewsLoading } = useGetVendorReviews();
+  const reviewsData = reviewsResponse?.data || {};
+  const summary = reviewsData.summary || {
+    averageRating: 0,
+    totalReviews: 0,
+    breakdown: {
+      facilities: 0,
+      cleanliness: 0,
+      services: 0,
+      comfort: 0,
+      location: 0,
+    },
+  };
+
+  const averageRating = Number(summary.averageRating) || 0;
+  const totalReviews = Number(summary.totalReviews) || 0;
+  const breakdown = summary.breakdown || {};
+
+  let ratingAdjective = "No Reviews";
+  if (averageRating >= 4.5) ratingAdjective = "Impressive";
+  else if (averageRating >= 4.0) ratingAdjective = "Very Good";
+  else if (averageRating >= 3.0) ratingAdjective = "Good";
+  else if (averageRating >= 2.0) ratingAdjective = "Fair";
+  else if (averageRating > 0) ratingAdjective = "Poor";
+
+  const ratingCategories = [
+    { key: "facilities" as const, label: "Facilities" },
+    { key: "cleanliness" as const, label: "Cleanliness" },
+    { key: "services" as const, label: "Services" },
+    { key: "comfort" as const, label: "Comfort" },
+    { key: "location" as const, label: "Location" },
+  ];
 
   const handleSubmitCheck = async ({
     id, status
@@ -60,42 +88,53 @@ export function RatingAndTasks() {
     <div className="grid grid-cols-1 gap-2 max-w-md">
       <Card className="border-none shadow-sm rounded-3xl">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xl font-bold ">
+          <CardTitle className="text-xl font-bold">
             Overall Rating
           </CardTitle>
-          <MoreHorizontal className="h-5 w-5 text-slate-400 cursor-pointer" />
+          <Link href="/reviews" title="View all reviews">
+            <MoreHorizontal className="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
+          </Link>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-8">
-            <div className="bg-emerald-50 rounded-xl p-4 flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-slate-800">4.6</span>
-              <span className="text-slate-400 text-sm">/5</span>
+            <div className="bg-white dark:bg-zinc-100 rounded-2xl p-4 flex items-baseline gap-1 shadow-sm">
+              <span className="text-3xl font-extrabold text-slate-900">
+                {averageRating > 0 ? averageRating.toFixed(1) : "0.0"}
+              </span>
+              <span className="text-slate-500 font-semibold text-xs">/5</span>
             </div>
             <div>
-              <p className="font-bold text-slate-800 text-lg leading-tight">
-                Impressive
+              <p className="font-bold text-foreground text-lg leading-tight">
+                {ratingAdjective}
               </p>
-              <p className="text-xs text-slate-400">from 2546 reviews</p>
+              <p className="text-xs text-muted-foreground">
+                from {totalReviews} {totalReviews === 1 ? "review" : "reviews"}
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            {ratings.map((item) => (
-              <div key={item.label} className="flex items-center gap-4">
-                <span className="text-sm text-slate-500 w-24">
-                  {item.label}
-                </span>
-                <div className="flex-1 h-2 bg-lime-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-violet-500 rounded-full"
-                    style={{ width: `${item.percentage}%` }}
-                  />
+            {ratingCategories.map((item) => {
+              const score = Number(breakdown[item.key] || 0);
+              const percentage = Math.min(100, Math.round((score / 5) * 100));
+
+              return (
+                <div key={item.key} className="flex items-center gap-4">
+                  <span className="text-xs text-muted-foreground w-24 font-medium">
+                    {item.label}
+                  </span>
+                  <div className="flex-1 h-2 bg-lime-100/60 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-violet-500 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-foreground w-6 text-right">
+                    {score > 0 ? score.toFixed(1) : "0.0"}
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-slate-700 w-6 text-right">
-                  {item.score}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -203,7 +242,6 @@ import {
   SettingsIcon,
   UserIcon,
 } from "lucide-react"
-import { ReactNode, useState } from "react";
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { deleteTask, updateTask } from "@/services/fetch.service";
 import { Spinner } from "@/components/ui/spinner";

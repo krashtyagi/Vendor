@@ -92,7 +92,7 @@ export function HotelDashboard({
             <CardContent>
               <div className="flex h-12 w-full rounded-lg overflow-hidden mb-6 border border-border/20">
                 {segments.map((segment, idx) => {
-                  const width = ((segment.value / total) * 100).toFixed(1);
+                  const width = total > 0 ? ((segment.value / total) * 100).toFixed(1) : "0.0";
                   return (
                     <TooltipUI key={idx}>
                       <TooltipTrigger asChild>
