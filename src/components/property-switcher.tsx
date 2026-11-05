@@ -45,7 +45,14 @@ export function PropertySwitcher() {
     }
   };
 
+  const MAX_PROPERTIES = 50;
+  const isLimitReached = properties.length >= MAX_PROPERTIES;
+
   const handleAddProperty = () => {
+    if (isLimitReached) {
+      toast.error(`Maximum limit of ${MAX_PROPERTIES} properties reached`);
+      return;
+    }
     router.push("/settings/add-property");
     if (isMobile) {
       setOpenMobile(false);
@@ -126,18 +133,24 @@ export function PropertySwitcher() {
         })}
 
         {/* Add Property Button */}
-        <button
-          type="button"
-          onClick={handleAddProperty}
-          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors group cursor-pointer hover:bg-sidebar-accent/50 text-muted-foreground hover:text-foreground"
-        >
-          <div className="h-7 w-7 rounded-full border border-dashed border-muted-foreground/40 flex items-center justify-center shrink-0 group-hover:border-emerald-500 group-hover:text-emerald-500 transition-colors">
-            <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+        {isLimitReached ? (
+          <div className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-muted-foreground/60 text-xs">
+            <span className="text-[11px] italic">Limit reached ({MAX_PROPERTIES}/{MAX_PROPERTIES})</span>
           </div>
-          <span className="text-xs font-medium truncate">
-            Add {entityName}
-          </span>
-        </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAddProperty}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors group cursor-pointer hover:bg-sidebar-accent/50 text-muted-foreground hover:text-foreground"
+          >
+            <div className="h-7 w-7 rounded-full border border-dashed border-muted-foreground/40 flex items-center justify-center shrink-0 group-hover:border-emerald-500 group-hover:text-emerald-500 transition-colors">
+              <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+            </div>
+            <span className="text-xs font-medium truncate">
+              Add {entityName}
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

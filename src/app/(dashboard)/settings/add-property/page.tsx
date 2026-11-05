@@ -38,7 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCurrentUser } from "@/services/queryes";
-import { useAddProperty } from "@/services/property.query";
+import { useAddProperty, useVendorProperties } from "@/services/property.query";
 import { useAuthStore } from "@/stores/auth.store";
 import { AiDescriptionButton } from "@/components/ai-description-button";
 import {
@@ -280,8 +280,13 @@ const getAmenityConfig = (serviceType: string) => {
 export default function AddPropertyStudio() {
   const router = useRouter();
   const { data: userData, isLoading: isUserLoading } = useCurrentUser();
+  const { data: propertiesData, isLoading: isPropertiesLoading } = useVendorProperties();
   const addPropertyMutation = useAddProperty();
   const { uploadFile, deleteFile } = useAuthStore();
+
+  const properties = propertiesData?.data?.properties || [];
+  const MAX_PROPERTIES = 50;
+  const isLimitReached = properties.length >= MAX_PROPERTIES;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -681,11 +686,32 @@ export default function AddPropertyStudio() {
   };
 
   // Loading state
-  if (isUserLoading) {
+  if (isUserLoading || isPropertiesLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">Loading studio...</p>
+      </div>
+    );
+  }
+
+  // Guard limit reached
+  if (isLimitReached) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+          <Building2 className="h-6 w-6 text-amber-500" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold">Property Limit Reached</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mt-1">
+            You have reached the maximum limit of {MAX_PROPERTIES} properties allowed per vendor account.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Go Back
+        </Button>
       </div>
     );
   }
