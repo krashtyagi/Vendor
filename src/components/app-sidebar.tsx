@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   IconBike,
   IconBuildingCommunity,
@@ -20,10 +20,10 @@ import {
   IconTag,
   IconTower,
   IconSettings,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain, NavSection } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -33,11 +33,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import LOGO from "./logo/logo"
-import { PropertySwitcher } from "./property-switcher"
-import { usePathname } from "next/navigation"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/sidebar";
+import LOGO from "./logo/logo";
+import { PropertySwitcher } from "./property-switcher";
+import { usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export const data = {
   user: {
@@ -53,7 +53,11 @@ export const data = {
       { title: "Calendar", url: "/calendar", icon: IconCalendar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
-      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      {
+        title: "Advertisements",
+        url: "/advertisements",
+        icon: IconSpeakerphone,
+      },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
       { title: "Listing", url: "/listing", icon: IconBuildingCommunity },
       { title: "Settings", url: "/settings", icon: IconSettings },
@@ -64,7 +68,11 @@ export const data = {
       { title: "Adventure", url: "/adventures", icon: IconMountain },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
-      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      {
+        title: "Advertisements",
+        url: "/advertisements",
+        icon: IconSpeakerphone,
+      },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
       { title: "Listing", url: "/listing", icon: IconMapPin },
       { title: "Settings", url: "/settings", icon: IconSettings },
@@ -75,7 +83,11 @@ export const data = {
       { title: "Cabs", url: "/cabs", icon: IconCar },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
-      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      {
+        title: "Advertisements",
+        url: "/advertisements",
+        icon: IconSpeakerphone,
+      },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
       { title: "Listing", url: "/listing", icon: IconMapPin },
       { title: "Settings", url: "/settings", icon: IconSettings },
@@ -86,7 +98,11 @@ export const data = {
       { title: "Bikes", url: "/bikes", icon: IconBike },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
-      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      {
+        title: "Advertisements",
+        url: "/advertisements",
+        icon: IconSpeakerphone,
+      },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
       { title: "Listing", url: "/listing", icon: IconMapPin },
       { title: "Settings", url: "/settings", icon: IconSettings },
@@ -97,54 +113,76 @@ export const data = {
       { title: "Tours", url: "/tours", icon: IconTower },
       { title: "Reviews", url: "/reviews", icon: IconMessage },
       { title: "Invoice", url: "/invoice", icon: IconFileInvoice },
-      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone },
+      {
+        title: "Advertisements",
+        url: "/advertisements",
+        icon: IconSpeakerphone,
+      },
       { title: "Promotions", url: "/promotions", icon: IconDiscount2 },
       { title: "Listing", url: "/listing", icon: IconMapPin },
       { title: "Settings", url: "/settings", icon: IconSettings },
     ],
   },
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
 
-  const [currCategory, setCurrCategory] = React.useState<keyof typeof data.navMain>("hotel");
+  const [currCategory, setCurrCategory] =
+    React.useState<keyof typeof data.navMain>("hotel");
 
   React.useEffect(() => {
-    const savedCategory = localStorage.getItem("category") as keyof typeof data.navMain;
+    const savedCategory = localStorage.getItem(
+      "category",
+    ) as keyof typeof data.navMain;
     if (savedCategory && data.navMain[savedCategory]) {
       setCurrCategory(savedCategory);
     }
+  }, []);
 
-    if (isMobile) {
-      setOpenMobile(false);
+  // Close sidebar only on mobile navigation (pathname change)
+  const prevPathname = React.useRef(pathname);
+  React.useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
+      if (isMobile) {
+        setOpenMobile(false);
+      }
     }
   }, [pathname, isMobile, setOpenMobile]);
 
-  const activeNavigationItems = data.navMain[currCategory] || data.navMain.hotel;
+  const activeNavigationItems =
+    data.navMain[currCategory] || data.navMain.hotel;
+
+  const sections: NavSection[] = [
+    {
+      title: currCategory.toUpperCase(),
+      items: activeNavigationItems,
+    },
+  ];
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader className="group-data-[collapsible=icon]:p-2 transition-all">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="p-1.5 hover:bg-transparent">
-              <React.Suspense fallback={<div><Loader2 className="animate-spin" /></div>}>
-                <LOGO />
-              </React.Suspense>
+          <SidebarMenuItem className="flex items-center group-data-[collapsible=icon]:justify-center">
+            <SidebarMenuButton
+              asChild
+              className="h-10 hover:bg-transparent group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
+            >
+              <LOGO />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        <NavMain items={activeNavigationItems} />
+      <SidebarContent className="overflow-y-auto">
+        <NavMain sections={sections} />
+        <PropertySwitcher />
       </SidebarContent>
 
-      <SidebarFooter className="gap-2 p-2">
-        <PropertySwitcher />
-        <div className="w-full border-t border-sidebar-border/60 my-0.5" />
+      <SidebarFooter>
         <NavUser />
       </SidebarFooter>
     </Sidebar>

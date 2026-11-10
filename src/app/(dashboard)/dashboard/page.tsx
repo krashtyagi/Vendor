@@ -31,6 +31,8 @@ export type Stats = {
   todayCheckIns: number;
   todayCheckOuts: number;
   totalRevenue: number;
+  grossRevenue?: number;
+  taxDeducted?: number;
 };
 
 export type RoomSummary = {

@@ -1,148 +1,100 @@
 "use client"
 
+import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { ChevronRight } from "lucide-react"
-
 import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
 
-interface NavSubItem {
+export interface NavItem {
   title: string
   url: string
+  icon?: any
 }
 
-interface NavItem {
-  title: string
-  url: string
-  icon?: React.ComponentType<{ className?: string; size?: number }>
-  items?: NavSubItem[]
-}
-
-interface NavMainProps {
+export interface NavSection {
+  title?: string
   items: NavItem[]
 }
 
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({
+  sections,
+  items,
+}: {
+  sections?: NavSection[]
+  items?: NavItem[]
+}) {
   const router = useRouter()
   const pathname = usePathname()
-  const [isMounted, setIsMounted] = useState(false)
+  const { isMobile, setOpenMobile } = useSidebar()
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  // Prevent mismatched IDs by not rendering the dynamic 
-  // collapsible elements until the client is ready
-  if (!isMounted) {
-    return null // or a simplified loading skeleton
+  const handleNavigation = (url: string) => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+    if (pathname === url) return
+    router.push(url)
   }
 
+  const effectiveSections: NavSection[] = sections || [
+    {
+      items: items || [],
+    },
+  ]
+
   return (
-    <SidebarMenu className="gap-1">
-      {items.map((item) => {
-        const isParentActive = pathname === item.url
-        const hasChildren = !!item.items?.length
-        const isAnyChildActive = hasChildren && item.items!.some((sub) => pathname === sub.url)
-        const isActive = isParentActive || isAnyChildActive
+    <div className="flex flex-col gap-3 py-1">
+      {effectiveSections.map((section, idx) => (
+        <SidebarGroup key={section.title || idx} className="p-0 px-2">
+          {section.title && (
+            <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 px-2.5 h-7">
+              {section.title}
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent className="flex flex-col gap-1 mt-0.5">
+            <SidebarMenu>
+              {section.items.map((item) => {
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== "/dashboard" && pathname.startsWith(item.url))
+                const IconComp = item.icon
 
-        if (hasChildren) {
-          return (
-            <Collapsible
-              key={item.title}
-              defaultOpen={isActive}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    isActive={isActive}
-                    className={`
-                      justify-between transition-colors
-                      data-[active=true]:bg-primary data-[active=true]:text-sidebar-accent-foreground
-                      hover:bg-primary/70 hover:text-sidebar-accent-foreground
-                      [&>svg]:text-muted-foreground group-data-[state=open]/collapsible:[&>svg:last-child]:text-foreground
-                    `}
-                    onClick={(e) => {
-                      // Allow navigation to parent overview page
-                      if ((e.target as HTMLElement).tagName !== "SVG" && item.url !== "#") {
-                        router.push(item.url)
-                      }
-                    }}
+                return (
+                  <SidebarMenuItem
+                    key={item.title}
+                    onClick={() => handleNavigation(item.url)}
                   >
-                    <div className="flex items-center gap-3">
-                      {item.icon && (
-                        <item.icon size={18} className="shrink-0" />
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={isActive}
+                      className={cn(
+                        "cursor-pointer font-medium",
+                        isActive &&
+                          "bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground font-medium"
                       )}
-                      <span className="text-sm font-medium">{item.title}</span>
-                    </div>
-
-                    <ChevronRight
-                      className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 text-muted-foreground group-hover:text-foreground"
-                    />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-
-                <CollapsibleContent className="transition-all duration-200">
-                  <SidebarMenuSub className="ml-0 pl-7 border-l border-sidebar-border/50">
-                    {item.items!.map((sub) => {
-                      const subActive = pathname.split("/")[1] === sub.url.split("/")[0]
-                      return (
-                        <SidebarMenuSubItem key={sub.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={subActive}
-                            onClick={() => router.push(sub.url)}
-                            className={`
-                              text-sm py-1.5
-                              data-[active=true]:text-sidebar-primary data-[active=true]:font-medium
-                              hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground
-                            `}
-                          >
-                            <span>{sub.title}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      )
-                    })}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          )
-        }
-
-        // Flat items
-        return (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton
-              tooltip={item.title}
-              isActive={pathname === item.url}
-              onClick={() => router.push(item.url)}
-              className={`
-                gap-3 py-2.5
-                data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-medium
-                hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground
-                transition-colors
-              `}
-            >
-              {item.icon && <item.icon size={18} className="shrink-0" />}
-              <span className="text-sm font-medium">{item.title}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )
-      })}
-    </SidebarMenu>
+                    >
+                      {IconComp &&
+                        (React.isValidElement(IconComp) ? (
+                          IconComp
+                        ) : (
+                          <IconComp size={18} className="shrink-0" />
+                        ))}
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ))}
+    </div>
   )
 }

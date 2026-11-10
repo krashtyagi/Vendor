@@ -34,26 +34,23 @@ export const useLogin = () => {
       if (result.success) {
         toast.success(result.message || "Login successful!");
 
-        if ( result.status=="draft") {
+        if (result.status === "draft") {
           setCurrStep(result.currentStep! + 1);
-          
           setCurrentStep(result.currentStep! + 1);
-          router.push("/signup/process");
-        }else if(result.status=="pending"){
-          setCurrStep( 6);
-          
+          window.location.href = "/signup/process";
+        } else if (result.status === "pending") {
+          setCurrStep(6);
           setCurrentStep(result.currentStep! + 2);
-          router.push("/signup/process");
-
+          window.location.href = "/signup/process";
         } else if (result.status === "rejected") {
           toast.error("Your account has been rejected");
           setSteeperStep(result.currentStep! + 1);
           setCurrStep(result.currentStep!);
-
-          router.push("/signup/process");
+          window.location.href = "/signup/process";
         } else if (result.status === "approved") {
-          await refetch();
-          router.push("/");
+          window.location.href = "/dashboard";
+        } else {
+          window.location.href = "/dashboard";
         }
       } else {
         toast.error(result.message || "Login failed");

@@ -158,7 +158,7 @@ export function HotelDashboard({
                         return (
                           <div className="bg-background border border-border p-2 rounded-md shadow-xl animate-in zoom-in-95 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] duration-300">
                             <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Revenue</p>
-                            <p className="font-bold text-foreground">${payload[0].value?.toLocaleString()}</p>
+                            <p className="font-bold text-foreground">₹{payload[0].value?.toLocaleString()}</p>
                           </div>
                         );
                       }

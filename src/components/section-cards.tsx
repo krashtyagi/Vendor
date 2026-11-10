@@ -18,19 +18,19 @@ const statCardsConfig = [
   {
     key: "totalRevenue" as const,
     title: "Total Revenue",
-    description: "Revenue this month",
+    description: "Net payout (after platform tax)",
     icon: IconCurrencyRupee,
     trendPrefix: "+",               // can be made dynamic later
     trendValue: "12.5%",           // ← placeholder – replace with real comparison later
-    trendComparedTo: "vs last month",
+    trendComparedTo: "net after tax",
     trendIcon: IconTrendingUp,
     valueFormatter: (val: number) => `₹${val.toLocaleString()}`,
     badgeVariant: "default" as const,
   },
   {
     key: "newBookings" as const,
-    title: "New Bookings",
-    description: "Bookings this month",
+    title: "Total Bookings",
+    description: "Property bookings",
     icon: IconUsers,
     trendPrefix: "+",
     trendValue: "8.1%",
@@ -139,6 +139,12 @@ export function SectionCards({ dash, isLoading }: SectionCardsProps) {
               {!showTrend && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {card.trendComparedTo}
+                </p>
+              )}
+
+              {card.key === "totalRevenue" && typeof stats.taxDeducted === "number" && stats.taxDeducted > 0 && (
+                <p className="mt-1 text-[11px] text-muted-foreground/80 font-medium">
+                  Tax deducted: ₹{stats.taxDeducted.toLocaleString()}
                 </p>
               )}
             </CardHeader>

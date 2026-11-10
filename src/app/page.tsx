@@ -21,18 +21,24 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
-    if (data) {
-      if (localStorage.getItem("status") === "draft") {
-        setCurrStep(data?.data?.vendor.currentStep)
-        router.replace("/signup/process")
+    if (!mounted || isLoading) return;
+
+    const user = data?.data;
+    const isVendor = Boolean(user && (user.vendor || user.role === "vendor" || user.isVendor));
+    const hasVendorToken = typeof window !== "undefined" && Boolean(localStorage.getItem(vendorAccessToken));
+
+    if (hasVendorToken && isVendor) {
+      const status = localStorage.getItem("status") || user?.vendor?.status || user?.status;
+      if (status === "draft") {
+        setCurrStep(user?.vendor?.currentStep || 1);
+        router.replace("/signup/process");
       } else {
-        router.replace("/dashboard")
+        router.replace("/dashboard");
       }
-    } else if (localStorage.getItem(vendorAccessToken) === null) {
-      router.replace("/login")
+    } else {
+      router.replace("/login");
     }
-  }, [data, mounted])
+  }, [data, mounted, isLoading, router, setCurrStep]);
 
   if (!mounted || isLoading) return <LogoLoader />
 
