@@ -1,5 +1,6 @@
 import { axiosApi } from "@/lib/axios";
 import { vendorAccessToken } from "@/services/auth";
+import { authClient } from "@/lib/auth-client";
 import { useCurrentUser } from "@/services/queryes";
 import { create } from "zustand";
 import { persist } from "zustand/middleware"; // 1. Import the middleware
@@ -135,6 +136,102 @@ export const useAuthStore = create<AuthStates>()(
       userLogin: async (data: Login_signup_Data) => {
         set({ isLoging: true });
         try {
+          if (data.email && data.password) {
+            const res = await authClient.signIn.email({
+              email: data.email,
+              password: data.password,
+            });
+
+            if (res.data) {
+              const userRole = (res.data.user as any)?.role;
+              const isVendor = (res.data.user as any)?.isVendor;
+              if (userRole !== "vendor" && !isVendor) {
+                await authClient.signOut();
+                return {
+                  success: false,
+                  message: "Access denied. Not a vendor account.",
+                  currentStep: 0,
+                  status: "draft",
+                };
+              }
+
+              set({ currUser: res.data.user as any });
+              const sessionToken = (res.data as any)?.token || (res.data as any)?.session?.token || "better-auth-session";
+              localStorage.setItem(vendorAccessToken, sessionToken);
+
+              try {
+                const vendorProfile = await axiosApi.get("/vendors/me", {
+                  headers: {
+                    Authorization: `Bearer ${sessionToken}`,
+                  },
+                });
+                const vData = vendorProfile.data?.data;
+                if (vData) {
+                  const status = vData.vendor?.status || vData.status || "approved";
+                  const currentStep = vData.vendor?.currentStep || vData.currentStep || 1;
+                  const serviceType = vData.vendor?.serviceType || vData.serviceType || "hotel";
+                  localStorage.setItem("status", status);
+                  localStorage.setItem("category", serviceType);
+                  set({
+                    draft: ["draft", "pending", "rejected"].includes(status),
+                    currStep: currentStep,
+                  });
+                  return {
+                    success: true,
+                    message: "Login successful",
+                    currentStep,
+                    status,
+                  };
+                }
+              } catch (profileErr) {}
+
+              localStorage.setItem("status", "approved");
+              localStorage.setItem("category", "hotel");
+              return {
+                success: true,
+                message: "Login successful",
+                currentStep: 1,
+                status: "approved",
+              };
+            }
+
+            if (res.error) {
+              // Fallback to legacy login during transition
+              try {
+                const fallbackRes = await axiosApi.post("/auth/login", data);
+                if (fallbackRes.data.success) {
+                  set({ currUser: fallbackRes.data.data.user });
+                  const token = fallbackRes.data.accessToken;
+                  const status = fallbackRes.data.data.vendor?.status || "approved";
+                  const currentStep = fallbackRes.data.data.vendor?.currentStep || 1;
+                  localStorage.setItem(vendorAccessToken, token);
+                  localStorage.setItem("status", status);
+                  localStorage.setItem(
+                    "category",
+                    fallbackRes.data.data?.vendor?.serviceType || "hotel",
+                  );
+                  set({
+                    draft: ["draft", "pending", "rejected"].includes(status),
+                    currStep: currentStep,
+                  });
+                  return {
+                    success: true,
+                    message: fallbackRes.data.message,
+                    currentStep: currentStep,
+                    status: status,
+                  };
+                }
+              } catch (e) {}
+
+              return {
+                success: false,
+                message: res.error.message || "Login failed",
+                currentStep: 0,
+                status: "draft",
+              };
+            }
+          }
+
           const res = await axiosApi.post("/auth/login", data);
           if (res.data.success) {
             set({ currUser: res.data.data.user });
@@ -145,7 +242,7 @@ export const useAuthStore = create<AuthStates>()(
             localStorage.setItem("status", status);
             localStorage.setItem(
               "category",
-              res.data.data?.vendor?.serviceType || "cab",
+              res.data.data?.vendor?.serviceType || "hotel",
             );
             set({
               draft: ["draft", "pending", "rejected"].includes(status),

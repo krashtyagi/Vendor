@@ -61,6 +61,7 @@ import { Input } from "./ui/input"
 import { useGetConnectedAccounts } from "@/services/tanstack.query"
 import { useAuthStore } from "@/stores/auth.store"
 import { vendorAccessToken } from "@/services/auth"
+import { signOut } from "@/lib/auth-client"
 import { axiosApi } from "@/lib/axios"
 
 export function NavUser() {
@@ -189,8 +190,13 @@ export function NavUser() {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await signOut();
+                  } catch (e) {}
                   localStorage.removeItem(vendorAccessToken);
+                  localStorage.removeItem("status");
+                  localStorage.removeItem("category");
                   queryClient.clear();
                   router.push("/login");
                 }}

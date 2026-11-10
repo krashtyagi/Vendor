@@ -1,78 +1,55 @@
-// import { axiosApi } from "@/lib/axios";
-
-// export const currentUser = async () => {
-//   const token = localStorage.getItem("vendoeAccessToken");
-
-//   if (!token) {
-//     throw new Error("No access token found");
-//   }
-
-//   try {
-//     const res = await axiosApi.get("/vendors/me", {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     return res.data;
-//   } catch (error) {
-//     console.error("currentUser service - API call failed:", error);
-//     throw error;
-//   }
-// };
 import { axiosApi } from "@/lib/axios";
 import { vendorAccessToken } from "./auth";
 
-const isTokenExpired = (token: string): boolean => {
-  if (!token) return true;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return true;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      window
-        .atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(""),
-    );
-    const payload = JSON.parse(jsonPayload);
-    if (!payload.exp) return false;
-    return payload.exp < Date.now() / 1000;
-  } catch (error) {
-    return true;
-  }
-};
-
 export const currentUser = async () => {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem(vendorAccessToken)
-      : null;
-
-  if (!token) {
-    throw new Error("No access token found");
-  }
-
-  if (typeof window !== "undefined" && isTokenExpired(token)) {
-    localStorage.removeItem(vendorAccessToken);
-    localStorage.removeItem("status");
-    localStorage.removeItem("category");
-    window.location.reload();
-    throw new Error("Access token expired");
-  }
-
   try {
-    const res = await axiosApi.get("/vendors/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem(vendorAccessToken)
+        : null;
+
+    if (!token) {
+      return null;
+    }
+
+    const res = await axiosApi.get("/vendors/me");
+    const data = res.data?.data;
+
+    // Check vendor entity presence or role
+    const isVendor = Boolean(
+      data && (data.vendor || data.role === "vendor" || data.isVendor)
+    );
+
+    if (!isVendor) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(vendorAccessToken);
+        localStorage.removeItem("status");
+        localStorage.removeItem("category");
+      }
+      return null;
+    }
+
+    // Attach role and isVendor to data for easy guard checks across the app
+    if (data) {
+      data.role = "vendor";
+      data.isVendor = true;
+      if (data.vendor?.status && !data.status) {
+        data.status = data.vendor.status;
+      }
+      if (data.vendor?.serviceType && !data.serviceType) {
+        data.serviceType = data.vendor.serviceType;
+      }
+    }
 
     return res.data;
-  } catch (error) {
-    console.error("currentUser service - API call failed:", error);
-    throw error;
+  } catch (error: any) {
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(vendorAccessToken);
+        localStorage.removeItem("status");
+        localStorage.removeItem("category");
+      }
+    }
+    return null;
   }
 };

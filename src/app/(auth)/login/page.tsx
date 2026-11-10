@@ -24,17 +24,23 @@ import { PageSkeleton } from "@/app/(dashboard)/(categories)/rooms/_components/d
 import { useAuthStore } from "@/stores/auth.store"
 export default function LoginPage() {
   const router = useRouter()
-  const { data } = useCurrentUser()
+  const { data, isLoading } = useCurrentUser()
   const { draft } = useAuthStore()
   useEffect(() => {
-    if (data?.data?.role === "vendor" && localStorage.getItem(vendorAccessToken) !== null) {
-      if (draft) {
+    if (isLoading) return;
+
+    const user = data?.data;
+    const isVendor = Boolean(user && (user.vendor || user.role === "vendor" || user.isVendor));
+    const hasVendorToken = typeof window !== "undefined" && Boolean(localStorage.getItem(vendorAccessToken));
+
+    if (hasVendorToken && isVendor) {
+      if (draft || localStorage.getItem("status") === "draft") {
         router.push("/signup/process")
       } else {
         router.push("/dashboard")
       }
     }
-  }, [data])
+  }, [data, isLoading, draft, router])
 
   return (
     <ErrorBoundary fallback={<MessageModal title="Error" description="Something went wrong" />}>

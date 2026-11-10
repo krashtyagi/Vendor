@@ -35,13 +35,14 @@ const Step_3_adventure = dynamic(() => import("../_components/step-3").then(m =>
 export default function Process() {
   const { currentStep, setCurrentStep } = useProcessContext();
   const router = useRouter();
+  const { data: userRes, isLoading } = useCurrentUser();
   const { currStep } = useAuthStore();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem(vendorAccessToken);
 
-      if (!token) {
+      if (!token && !isLoading && !userRes?.data) {
         router.replace("/login");
       }
     }
