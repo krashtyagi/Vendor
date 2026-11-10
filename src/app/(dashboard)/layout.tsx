@@ -17,7 +17,7 @@ import { useCurrentUser } from "@/services/queryes";
 export default function Page({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ok, setOk] = useState(false);
-  const { data: userRes, isLoading } = useCurrentUser();
+  const { data: userRes, isLoading, refetch } = useCurrentUser();
 
   const user = userRes?.data;
   const isVendor = Boolean(
@@ -27,16 +27,37 @@ export default function Page({ children }: { children: React.ReactNode }) {
     typeof window !== "undefined" &&
     Boolean(localStorage.getItem(vendorAccessToken));
 
+  // If token is stored in localStorage but query hasn't populated, refetch
+  useEffect(() => {
+    if (hasVendorToken && !user && !isLoading) {
+      refetch();
+    }
+  }, [hasVendorToken, user, isLoading, refetch]);
+
   useEffect(() => {
     if (isLoading) return;
 
-    if (!hasVendorToken || !isVendor) {
+    if (!hasVendorToken) {
       setOk(false);
       router.replace("/login");
-    } else {
+      return;
+    }
+
+    if (user && !isVendor) {
+      setOk(false);
+      router.replace("/login");
+      return;
+    }
+
+    if (user && isVendor) {
+      const status = user?.vendor?.status || user?.status || localStorage.getItem("status");
+      if (status === "draft" || status === "pending" || status === "rejected") {
+        router.replace("/signup/process");
+        return;
+      }
       setOk(true);
     }
-  }, [hasVendorToken, isVendor, isLoading, router]);
+  }, [hasVendorToken, isVendor, user, isLoading, router]);
 
   if (!ok || !hasVendorToken || !isVendor) return <LogoLoader />;
   return (
