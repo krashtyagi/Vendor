@@ -34,10 +34,11 @@ export default function LoginPage() {
     const hasVendorToken = typeof window !== "undefined" && Boolean(localStorage.getItem(vendorAccessToken));
 
     if (hasVendorToken && isVendor) {
-      if (draft || localStorage.getItem("status") === "draft") {
-        router.push("/signup/process")
+      const status = user?.vendor?.status || user?.status || localStorage.getItem("status");
+      if (status === "draft" || status === "pending" || status === "rejected") {
+        router.push("/signup/process");
       } else {
-        router.push("/dashboard")
+        router.push("/dashboard");
       }
     }
   }, [data, isLoading, draft, router])

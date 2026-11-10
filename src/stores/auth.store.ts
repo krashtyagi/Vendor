@@ -156,7 +156,21 @@ export const useAuthStore = create<AuthStates>()(
               }
 
               set({ currUser: res.data.user as any });
-              const sessionToken = (res.data as any)?.token || (res.data as any)?.session?.token || "better-auth-session";
+              let sessionToken =
+                (res.data as any)?.token ||
+                (res.data as any)?.session?.token;
+
+              if (!sessionToken) {
+                try {
+                  const s = await authClient.getSession();
+                  sessionToken = (s?.data as any)?.token || (s?.data as any)?.session?.token;
+                } catch (e) {}
+              }
+
+              if (!sessionToken) {
+                sessionToken = "better-auth-session";
+              }
+
               localStorage.setItem(vendorAccessToken, sessionToken);
 
               try {
@@ -183,7 +197,33 @@ export const useAuthStore = create<AuthStates>()(
                     status,
                   };
                 }
-              } catch (profileErr) {}
+              } catch (profileErr) {
+                try {
+                  const uRes = await axiosApi.get("/users/me", {
+                    headers: {
+                      Authorization: `Bearer ${sessionToken}`,
+                    },
+                  });
+                  const uData = uRes.data?.data || uRes.data;
+                  if (uData) {
+                    const status = uData.vendor?.status || "approved";
+                    const currentStep = uData.vendor?.currentStep || 1;
+                    const serviceType = uData.vendor?.serviceType || "hotel";
+                    localStorage.setItem("status", status);
+                    localStorage.setItem("category", serviceType);
+                    set({
+                      draft: ["draft", "pending", "rejected"].includes(status),
+                      currStep: currentStep,
+                    });
+                    return {
+                      success: true,
+                      message: "Login successful",
+                      currentStep,
+                      status,
+                    };
+                  }
+                } catch (uErr) {}
+              }
 
               localStorage.setItem("status", "approved");
               localStorage.setItem("category", "hotel");
