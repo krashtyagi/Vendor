@@ -1,246 +1,323 @@
-'use client'
-import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useResetPassword } from "@/hooks/auth/forgotPassword"
-import LOGO from "@/components/logo/logo"
-import trivlloData from "@/../trivllo.json"
-import { ErrorBoundary } from "react-error-boundary"
-import { Suspense } from "react"
-import { MessageModal } from "@/app/(dashboard)/(categories)/rooms/_components/RoomsListing"
-import { PageSkeleton } from "@/app/(dashboard)/(categories)/rooms/_components/details.skeleton"
-import { Eye, EyeOff } from "lucide-react"
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { REGEXP_ONLY_DIGITS } from "input-otp"
+"use client";
+
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { useResetPassword } from "@/hooks/auth/forgotPassword";
+import { ErrorBoundary } from "react-error-boundary";
+import { Suspense } from "react";
+import { MessageModal } from "@/app/(dashboard)/(categories)/rooms/_components/RoomsListing";
+import { PageSkeleton } from "@/app/(dashboard)/(categories)/rooms/_components/details.skeleton";
+import { Eye, EyeOff, Lock, Mail, Sparkles, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import WatermelonAuthShell from "@/components/auth/watermelon-auth-shell";
+import Link from "next/link";
 
 export default function ResetPasswordPage() {
   return (
     <ErrorBoundary fallback={<MessageModal title="Error" description="Something went wrong" />}>
       <Suspense fallback={<PageSkeleton />}>
-        <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-          <div className="w-full max-w-sm">
-            <ResetPasswordForm />
-          </div>
-        </div>
+        <WatermelonAuthShell
+          categoryTag="Account Recovery"
+          editorialSubtitle="ACCOUNT SECURITY"
+          editorialTitle="Recover access to your vendor command center"
+          editorialDescription="Reset your credentials with secure verification codes sent directly to your registered business email."
+          rightContainerClassName="max-w-md"
+        >
+          <ResetPasswordForm />
+        </WatermelonAuthShell>
       </Suspense>
     </ErrorBoundary>
-  )
+  );
 }
 
-function ResetPasswordForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  const [step, setStep] = useState(1) // 1: Email, 2: OTP, 3: New Password
-  const { methods, loading, onGenerateOtp, onVerify, onHandleSubmit } = useResetPassword()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+function ResetPasswordForm({ className, ...props }: React.ComponentProps<"div">) {
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
+  const { methods, loading, onGenerateOtp, onVerify, onHandleSubmit } = useResetPassword();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const email = methods.watch("email")
-  const otp = methods.watch("otp")
+  const email = methods.watch("email");
+  const otp = methods.watch("otp");
 
   const handleSendOtp = async () => {
     if (!email) {
-      methods.setError("email", { type: "manual", message: "Email is required" })
-      return
+      methods.setError("email", { type: "manual", message: "Email is required" });
+      return;
     }
-    await onGenerateOtp(email, setStep)
-  }
+    await onGenerateOtp(email, setStep);
+  };
 
   const handleVerifyOtp = async () => {
     if (!otp || otp.length < 4) {
-      methods.setError("otp", { type: "manual", message: "OTP must be 4 digits" })
-      return
+      methods.setError("otp", { type: "manual", message: "OTP must be 4 digits" });
+      return;
     }
-    await onVerify(email, otp, setStep)
-  }
+    await onVerify(email, otp, setStep);
+  };
+
+  const inputClasses =
+    "w-full rounded-full border border-white/15 bg-white/5 pl-11 pr-5 py-3 text-xs text-white placeholder:text-zinc-500 focus:border-[#0084ff] focus:outline-none focus:ring-2 focus:ring-[#0084ff]/20 transition-all disabled:opacity-50";
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("w-full space-y-6", className)} {...props}>
       <Form {...methods}>
-        <form onSubmit={onHandleSubmit}>
-          <FieldGroup>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <a href="#" className="flex flex-col items-center gap-2 font-medium">
-                <div className="flex items-center justify-center rounded-md">
-                  <LOGO />
-                </div>
-                <span className="sr-only">{trivlloData.company_name} Vendor</span>
-              </a>
-              <h1 className="text-xl font-bold">Reset Password</h1>
-              <FieldDescription>
-                {step === 1 && "Enter your email to receive a password reset code."}
-                {step === 2 && "Enter the 4-digit code sent to your email."}
-                {step === 3 && "Enter your new password."}
-              </FieldDescription>
+        <form onSubmit={onHandleSubmit} className="space-y-6">
+          <FieldGroup className="space-y-5">
+            {/* Title Block with Premium Styling */}
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] font-medium text-emerald-300 tracking-wide mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Password Recovery</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-serif font-normal tracking-tight text-white">
+                Reset Password
+              </h1>
+              <p className="mt-1.5 text-xs sm:text-sm text-zinc-300/85 font-light leading-relaxed tracking-wide">
+                {step === 1 && "Enter your registered email address to receive a verification code."}
+                {step === 2 && "Enter the 4-digit verification code sent to your email."}
+                {step === 3 && "Create a new strong password for your vendor account."}
+              </p>
             </div>
 
+            {/* Step 1: Email */}
             {step === 1 && (
-              <Field>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reset-email" className="text-xs font-medium text-zinc-300 tracking-wide">
+                  Email Address
+                </label>
                 <FormField
                   control={methods.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
+                    <FormItem className="space-y-0">
                       <FormControl>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="Enter your email"
-                          disabled={loading}
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                          <input
+                            id="reset-email"
+                            type="email"
+                            placeholder="Enter your registered email"
+                            disabled={loading}
+                            {...field}
+                            className={inputClasses}
+                          />
+                        </div>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs text-rose-400 pl-3 pt-1" />
                     </FormItem>
                   )}
                 />
-              </Field>
+              </div>
             )}
 
+            {/* Step 2: OTP */}
             {step === 2 && (
-              <Field className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-4 py-2">
                 <FormField
                   control={methods.control}
                   name="otp"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col items-center">
-                      <FormLabel className="text-center">Verification Code</FormLabel>
+                    <FormItem className="space-y-2 text-center">
                       <FormControl>
                         <InputOTP
                           maxLength={4}
-                          pattern={REGEXP_ONLY_DIGITS}
-                          disabled={loading}
                           value={field.value}
                           onChange={field.onChange}
+                          className="justify-center"
                         >
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
+                          <InputOTPGroup className="gap-3">
+                            {[0, 1, 2, 3].map((index) => (
+                              <InputOTPSlot
+                                key={index}
+                                index={index}
+                                className="h-14 w-12 sm:w-14 rounded-xl border border-zinc-800 bg-zinc-900/80 text-xl font-bold font-mono text-white focus-visible:border-white focus-visible:ring-2 focus-visible:ring-white/20 transition-all"
+                              />
+                            ))}
                           </InputOTPGroup>
                         </InputOTP>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs text-rose-400 pt-1" />
                     </FormItem>
                   )}
                 />
-              </Field>
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="text-xs text-[#0084ff] hover:text-sky-300 hover:underline font-medium"
+                >
+                  Resend code
+                </button>
+              </div>
             )}
 
+            {/* Step 3: New Passwords */}
             {step === 3 && (
-              <>
-                <Field>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="new-password" className="text-xs font-medium text-zinc-300 tracking-wide">
+                    New Password
+                  </label>
                   <FormField
                     control={methods.control}
                     name="password"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
+                      <FormItem className="space-y-0">
                         <FormControl>
-                          <div className="relative flex items-center">
-                            <Input
-                              id="password"
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <input
+                              id="new-password"
                               type={showPassword ? "text" : "password"}
-                              placeholder="New password"
+                              placeholder="••••••••••••"
                               disabled={loading}
-                              className="pr-10"
                               {...field}
+                              className={cn(inputClasses, "pr-11")}
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              disabled={loading}
-                              className="absolute right-3 flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none disabled:opacity-50"
+                              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                             >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs text-rose-400 pl-3 pt-1" />
                       </FormItem>
                     )}
                   />
-                </Field>
+                </div>
 
-                <Field>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="confirm-password" className="text-xs font-medium text-zinc-300 tracking-wide">
+                    Confirm New Password
+                  </label>
                   <FormField
                     control={methods.control}
                     name="confirmPassword"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                      <FormItem className="space-y-0">
                         <FormControl>
-                          <div className="relative flex items-center">
-                            <Input
-                              id="confirmPassword"
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <input
+                              id="confirm-password"
                               type={showConfirmPassword ? "text" : "password"}
-                              placeholder="Confirm new password"
+                              placeholder="••••••••••••"
                               disabled={loading}
-                              className="pr-10"
                               {...field}
+                              className={cn(inputClasses, "pr-11")}
                             />
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              disabled={loading}
-                              className="absolute right-3 flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none disabled:opacity-50"
+                              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                             >
-                              {showConfirmPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs text-rose-400 pl-3 pt-1" />
                       </FormItem>
                     )}
                   />
-                </Field>
-              </>
+                </div>
+              </div>
             )}
 
-            <Field className="mt-2">
+            {/* Clean Solid Blue Submit Buttons (No colorful rainbow gradient) */}
+            <div className="pt-2">
               {step === 1 && (
-                <Button type="button" onClick={handleSendOtp} disabled={loading} className="w-full">
-                  {loading ? "Sending..." : "Send Verification Code"}
+                <Button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="w-full h-12 rounded-full bg-[#0084ff] hover:bg-[#0074e8] text-white font-semibold text-sm shadow-md shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Sending Code...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Verification Code</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </Button>
               )}
-              {step === 2 && (
-                <Button type="button" onClick={handleVerifyOtp} disabled={loading} className="w-full">
-                  {loading ? "Verifying..." : "Verify OTP"}
-                </Button>
-              )}
-              {step === 3 && (
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? "Resetting..." : "Reset Password"}
-                </Button>
-              )}
-            </Field>
 
-            <div className="text-center mt-2">
-              <a href="/login" className="text-xs font-semibold text-primary hover:underline">
-                Back to Login
-              </a>
+              {step === 2 && (
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                    disabled={loading}
+                    className="w-1/3 h-12 rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 text-xs font-medium"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={loading}
+                    className="w-2/3 h-12 rounded-full bg-[#0084ff] hover:bg-[#0074e8] text-white font-semibold text-sm shadow-md shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Verify Code</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {step === 3 && (
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-full bg-[#0084ff] hover:bg-[#0074e8] text-white font-semibold text-sm shadow-md shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Updating Password...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Set New Password</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </FieldGroup>
         </form>
       </Form>
+
+      {/* Return to Sign in */}
+      <div className="text-center pt-2 border-t border-white/10">
+        <Link
+          href="/login"
+          className="text-xs font-medium text-[#0084ff] hover:text-sky-300 hover:underline"
+        >
+          ← Return to Login
+        </Link>
+      </div>
     </div>
-  )
+  );
 }

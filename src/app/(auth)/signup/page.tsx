@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { cn } from "@/lib/utils";
 import {
@@ -7,14 +7,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { MessageModal } from "@/app/(dashboard)/(categories)/rooms/_components/RoomsListing";
 import { ErrorBoundary } from "react-error-boundary";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { PageSkeleton } from "@/app/(dashboard)/(categories)/rooms/_components/details.skeleton";
-import {
-  useAuthContext,
-} from "@/context/auth/AuthContextProvider";
+import { useAuthContext } from "@/context/auth/AuthContextProvider";
 import LOGO from "@/components/logo/logo";
 import { OTPForm } from "./_components/otpForm";
 import { useSignUp } from "./hooks/use-signup";
@@ -23,15 +20,21 @@ import trivlloData from "@/../trivllo.json";
 import { Form } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { SignUpProps } from "@/schema/auth";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import ButtonHandler from "./_components/buttonHandler";
-import { Step1Skeleton, OtpSkeleton } from "./_components/skeletons";
+import { SignupSkeleton, OtpSkeleton } from "./_components/skeletons";
+import WatermelonAuthShell from "@/components/auth/watermelon-auth-shell";
+import {
+  Mail,
+  Lock,
+  User,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import Link from "next/link";
+
 export default function SignupPage() {
   const { currentStep } = useAuthContext();
 
@@ -42,11 +45,15 @@ export default function SignupPage() {
       }
     >
       <Suspense fallback={<PageSkeleton />}>
-        <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 ">
-          <div className=" max-w-md w-full ">
-            <SignupForm />
-          </div>
-        </div>
+        <WatermelonAuthShell
+          categoryTag="Partner Portal"
+          editorialSubtitle="YOU CAN EASILY"
+          editorialTitle="Get access your personal hub for clarity and hospitality growth"
+          editorialDescription="Connect your properties to thousands of verified travelers, optimize inventory, and receive direct settlement payouts."
+          rightContainerClassName="max-w-md"
+        >
+          <SignupForm />
+        </WatermelonAuthShell>
       </Suspense>
     </ErrorBoundary>
   );
@@ -54,20 +61,22 @@ export default function SignupPage() {
 
 function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
   const { currentStep, setCurrentStep } = useAuthContext();
-  const { loading, methods, onHandleSubmit, onGenerateOtp, veryOtp } = useSignUp();
+  const { loading, methods, onHandleSubmit, onGenerateOtp, veryOtp } =
+    useSignUp();
+
   if (loading) {
     if (currentStep === 2) {
-      return <Step1Skeleton />;
+      return <OtpSkeleton />;
     }
-    return <OtpSkeleton />;
+    return <SignupSkeleton />;
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("w-full space-y-6", className)} {...props}>
       <Form {...methods}>
-        <form onSubmit={onHandleSubmit}>
+        <form onSubmit={onHandleSubmit} className="space-y-6">
           <SignupOtp currentStep={currentStep} methods={methods} />
-          <div className="flex justify-center p-4">
+          <div>
             <ButtonHandler
               currentStep={currentStep}
               methods={methods}
@@ -79,10 +88,24 @@ function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
           </div>
         </form>
       </Form>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+
+      <div className="text-center text-[11px] text-zinc-400 font-light px-2 leading-relaxed">
+        By clicking continue, you agree to our{" "}
+        <a
+          href="#"
+          className="underline text-white hover:text-[#0084ff] transition-colors"
+        >
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a
+          href="#"
+          className="underline text-white hover:text-[#0084ff] transition-colors"
+        >
+          Privacy Policy
+        </a>
+        .
+      </div>
     </div>
   );
 }
@@ -95,244 +118,261 @@ const SignupOtp = ({
   methods: UseFormReturn<SignUpProps>;
 }) => {
   const [onOTP, setOnOTP] = React.useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
+
   const {
     register,
     formState: { errors },
-    watch,
   } = methods;
+
   if (currentStep === 2) {
     return <OTPForm methods={methods} onOTP={onOTP} setOnOTP={setOnOTP} />;
   }
+
+  const inputClasses =
+    "w-full rounded-full border border-white/15 bg-white/5 pl-11 pr-5 py-3 text-xs text-white placeholder:text-zinc-500 focus:border-[#0084ff] focus:outline-none focus:ring-2 focus:ring-[#0084ff]/20 transition-all";
+
   return (
-    <FieldGroup className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <a href="#" className="flex flex-col items-center gap-2 font-medium">
-          <div className="flex items-center justify-center rounded-md">
-            <LOGO />
-          </div>
-          <span className="sr-only">{trivlloData.company_name} Vendor</span>
-          <h1 className="text-2xl font-bold">Welcome to {trivlloData.company_name} Vendor</h1>
-        </a>
-        <FieldDescription>
-          Already have an account?{" "}
-          <a href="/login" className="text-primary hover:underline">
-            Sign in
-          </a>
-        </FieldDescription>
+    <FieldGroup className="space-y-5 ">
+      {/* Title Block with Premium Styling */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-serif font-normal tracking-tight text-white">
+          Get Started Now
+        </h1>
+        <p className="mt-1.5 text-xs sm:text-sm text-zinc-300/85 font-light leading-relaxed tracking-wide">
+          Create your vendor partner account to manage listings and earn
+          payouts.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Email */}
-        <Field className="md:col-span-2">
-          <FieldLabel htmlFor="email">Email Address</FieldLabel>
-          <Input
-            id="email"
-            type="email"
-            placeholder="example@example.com"
-            {...register("email")}
-            className={cn(errors.email && "border-destructive")}
-          />
-          {errors.email && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.email.message}
-            </p>
-          )}
-        </Field>
-
-        {/* Password */}
-        <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            {...register("password")}
-            className={cn(errors.password && "border-destructive")}
-          />
-          {errors.password && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </Field>
-
-        {/* Confirm Password */}
-        <Field>
-          <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            {...register("confirmPassword")}
-            className={cn(errors.confirmPassword && "border-destructive")}
-          />
-          {errors.confirmPassword && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </Field>
-
-        {/* Role */}
-        <Field>
-          <FieldLabel>Role</FieldLabel>
-          <Select
-            disabled={true}
-            onValueChange={(value) => methods.setValue("role", value as any)}
-            defaultValue="vendor"
+      {/* Form Fields */}
+      <div className="space-y-4">
+        {/* Email Address */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="email"
+            className="text-xs font-medium text-zinc-300 tracking-wide"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vendor">Vendor</SelectItem>
-              <SelectItem value="customer">Customer</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.role && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.role.message}
-            </p>
+            Email address
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              {...register("email")}
+              className={cn(
+                inputClasses,
+                errors.email && "border-rose-500 focus:ring-rose-500/20",
+              )}
+            />
+          </div>
+          {errors.email && (
+            <p className="text-xs text-rose-400 pl-3">{errors.email.message}</p>
           )}
-        </Field>
+        </div>
 
-        {/* First Name */}
-        <Field>
-          <FieldLabel htmlFor="firstName">First Name</FieldLabel>
-          <Input
-            id="firstName"
-            placeholder="Rahul"
-            {...register("firstName")}
-            className={cn(errors.firstName && "border-destructive")}
-          />
-          {errors.firstName && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.firstName.message}
-            </p>
-          )}
-        </Field>
+        {/* First & Last Name */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="firstName"
+              className="text-xs font-medium text-zinc-300 tracking-wide"
+            >
+              First Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                id="firstName"
+                placeholder="Rahul"
+                {...register("firstName")}
+                className={cn(
+                  inputClasses,
+                  "pl-11 pr-4",
+                  errors.firstName && "border-rose-500 focus:ring-rose-500/20",
+                )}
+              />
+            </div>
+            {errors.firstName && (
+              <p className="text-xs text-rose-400 pl-2">
+                {errors.firstName.message}
+              </p>
+            )}
+          </div>
 
-        {/* Last Name */}
-        <Field>
-          <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
-          <Input
-            id="lastName"
-            placeholder="Sharma"
-            {...register("lastName")}
-            className={cn(errors.lastName && "border-destructive")}
-          />
-          {errors.lastName && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.lastName.message}
-            </p>
-          )}
-        </Field>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="lastName"
+              className="text-xs font-medium text-zinc-300 tracking-wide"
+            >
+              Last Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                id="lastName"
+                placeholder="Sharma"
+                {...register("lastName")}
+                className={cn(
+                  inputClasses,
+                  "pl-11 pr-4",
+                  errors.lastName && "border-rose-500 focus:ring-rose-500/20",
+                )}
+              />
+            </div>
+            {errors.lastName && (
+              <p className="text-xs text-rose-400 pl-2">
+                {errors.lastName.message}
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Phone Number */}
-        <Field>
-          <FieldLabel htmlFor="phoneNumber">Phone Number</FieldLabel>
-          <Input
-            id="phoneNumber"
-            type="tel"
-            placeholder="9876543210"
-            {...register("phoneNumber")}
-            className={cn(errors.phoneNumber && "border-destructive")}
-          />
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="phoneNumber"
+            className="text-xs font-medium text-zinc-300 tracking-wide"
+          >
+            Phone number
+          </label>
+          <div className="relative">
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              id="phoneNumber"
+              type="tel"
+              placeholder="+91 98765 43210"
+              {...register("phoneNumber")}
+              className={cn(
+                inputClasses,
+                errors.phoneNumber && "border-rose-500 focus:ring-rose-500/20",
+              )}
+            />
+          </div>
           {errors.phoneNumber && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="text-xs text-rose-400 pl-3">
               {errors.phoneNumber.message}
             </p>
           )}
-        </Field>
+        </div>
 
-        {/* Gender */}
-        {/* <Field>
-          <FieldLabel>Gender</FieldLabel>
-          <Select
-            onValueChange={(value) => methods.setValue("gender", value as any)}
-            defaultValue="male"
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="password"
+            className="text-xs font-medium text-zinc-300 tracking-wide"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.gender && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.gender.message}
+            Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••••••"
+              {...register("password")}
+              className={cn(
+                inputClasses,
+                "pr-11",
+                errors.password && "border-rose-500 focus:ring-rose-500/20",
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-xs text-rose-400 pl-3">
+              {errors.password.message}
             </p>
           )}
-        </Field> */}
+        </div>
 
-        {/* Date of Birth */}
-        {/* <Field>
-          <FieldLabel htmlFor="dob">Date of Birth</FieldLabel>
-          <Input
-            id="dob"
-            type="date"
-            {...register("dob")}
-            className={cn(errors.dob && "border-destructive")}
-          />
-          {errors.dob && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.dob.message}
+        {/* Confirm Password */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="confirmPassword"
+            className="text-xs font-medium text-zinc-300 tracking-wide"
+          >
+            Confirm password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="••••••••••••"
+              {...register("confirmPassword")}
+              className={cn(
+                inputClasses,
+                "pr-11",
+                errors.confirmPassword &&
+                  "border-rose-500 focus:ring-rose-500/20",
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-xs text-rose-400 pl-3">
+              {errors.confirmPassword.message}
             </p>
           )}
-        </Field> */}
+        </div>
 
-        {/* Country */}
-        {/* <Field>
-          <FieldLabel htmlFor="country">Country</FieldLabel>
-          <Input
-            id="country"
-            placeholder="India"
-            {...register("country")}
-            className={cn(errors.country && "border-destructive")}
+        {/* Terms Agreement Checkbox */}
+        <div className="flex items-center gap-2.5 pt-1">
+          <input
+            id="terms-checkbox"
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="h-4 w-4 rounded-md border-white/20 bg-white/5 text-[#0084ff] focus:ring-[#0084ff]/20 accent-[#0084ff]"
           />
-          {errors.country && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.country.message}
-            </p>
-          )}
-        </Field> */}
+          <label
+            htmlFor="terms-checkbox"
+            className="text-xs text-zinc-300 font-light cursor-pointer select-none"
+          >
+            I agree to the{" "}
+            <a href="#" className="underline text-white hover:text-[#0084ff]">
+              terms &amp; policy
+            </a>
+          </label>
+        </div>
+      </div>
 
-        {/* Address - Full Width */}
-        {/* <Field className="md:col-span-2">
-          <FieldLabel htmlFor="address">Address</FieldLabel>
-          <Input
-            id="address"
-            placeholder="MG Road, Bangalore"
-            {...register("address")}
-            className={cn(errors.address && "border-destructive")}
-          />
-          {errors.address && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.address.message}
-            </p>
-          )}
-        </Field> */}
-
-        {/* Zipcode */}
-        {/* <Field className="md:col-span-2">
-          <FieldLabel htmlFor="zipcode">Zipcode / Postal Code</FieldLabel>
-          <Input
-            id="zipcode"
-            placeholder="452001"
-            {...register("zipcode")}
-            className={cn(errors.zipcode && "border-destructive")}
-          />
-          {errors.zipcode && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.zipcode.message}
-            </p>
-          )}
-        </Field> */}
+      {/* Sign In Link */}
+      <div className="text-center pt-2 border-t border-white/10">
+        <p className="text-xs text-zinc-400 font-light">
+          Already have a vendor account?{" "}
+          <Link
+            href="/login"
+            className="font-medium text-[#0084ff] hover:text-sky-300 hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
     </FieldGroup>
   );

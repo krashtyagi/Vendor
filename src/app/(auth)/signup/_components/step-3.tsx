@@ -69,7 +69,7 @@ interface LocationPickerProps {
 
 const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
     return (
-        <div className="h-[300px] w-full relative">
+        <div className="h-[220px] sm:h-[300px] w-full relative">
             <MapContainer
                 center={value}
                 zoom={13}
@@ -246,7 +246,7 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                 </Field>
 
                 <Field className="md:col-span-2">
-                    <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2">
                             <Info className="w-4 h-4 text-primary" />
                             <FieldLabel className="text-slate-200">Description</FieldLabel>
@@ -394,14 +394,14 @@ export const Step_3_hotel = ({ methods }: { currentStep: number; methods: UseFor
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     <FieldLabel className="text-slate-200">Amenities & Features</FieldLabel>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {amenityKeys.map((id) => (
                         <FormField
                             key={id}
                             control={control}
                             name="amenities"
                             render={({ field }) => (
-                                <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border border-white/5 p-4 hover:border-white/10 hover:bg-white/[0.01] transition-colors">
+                                <FormItem className="flex items-center space-x-2.5 sm:space-x-3 space-y-0 rounded-xl border border-white/5 p-2.5 sm:p-4 hover:border-white/10 hover:bg-white/[0.01] transition-colors">
                                     <FormControl>
                                         <Checkbox
                                             checked={field.value?.includes(id)}

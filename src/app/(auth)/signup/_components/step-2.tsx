@@ -1,170 +1,12 @@
-// "use client";
-
-// import { useState, useRef } from "react";
-// import { useFormContext, UseFormReturn } from "react-hook-form";
-// import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
-
-// import { Button } from "@/components/ui/button";
-// import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-// import { Input } from "@/components/ui/input";
-// import { toast } from "sonner";
-// import { Field, FieldLabel, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLegend, FieldSeparator, FieldSet, FieldTitle } from "@/components/ui/field";
-// import LOGO from "@/components/logo/logo";
-// import { SignUpProps } from "@/schema/auth";
-// import { cn } from "@/lib/utils";
-// import { SelectContent, Select, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import ImageField from "./image-input";
-// import { useAuthStore } from "@/stores/auth.store";
-
-
-// interface UploadedFile {
-//   url: string;
-//   public_id: string;
-//   resource_type: string;
-// }
-
-
-// export const Step_2 = ({
-//   currentStep,
-//   methods,
-// }: {
-//   currentStep: number;
-//   methods: UseFormReturn<SignUpProps>;
-// }) => {
-//   const {
-//     register,
-//     formState: { errors },
-//     watch,
-//   } = methods;
-//   return (
-//     <FieldGroup className="space-y-6">
-
-
-//       <div className="flex flex-col  gap-6">
-
-
-//         {/* Business Name */}
-//         <Field className="md:col-span-2">
-//           <FieldLabel htmlFor="accountHolderName">AccountHolder Name</FieldLabel>
-//           <Input
-//             id="accountHolderName"
-//             type="text"
-//             placeholder="accountHolderName"
-//             {...register("accountHolderName")}
-//             className={cn(errors.accountHolderName && "border-destructive")}
-//           />
-//           {errors.accountHolderName && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.accountHolderName.message}
-//             </p>
-//           )}
-//         </Field>
-//         {/* bank Name */}
-//         <Field className="md:col-span-2">
-//           <FieldLabel htmlFor="bankName">bankName Name</FieldLabel>
-//           <Input
-//             id="bankName"
-//             type="text"
-//             placeholder="accountHolderName"
-//             {...register("bankName")}
-//             className={cn(errors.bankName && "border-destructive")}
-//           />
-//           {errors.bankName && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.bankName.message}
-//             </p>
-//           )}
-//         </Field>
-
-
-
-//         {/* account Number */}
-//         <Field>
-//           <FieldLabel htmlFor="accountNumber">Account Number</FieldLabel>
-//           <Input
-//             id="accountNumber"
-//             type="number"
-//             placeholder="1234567890"
-//             {...register("accountNumber")}
-//             className={cn(errors.accountNumber && "border-destructive")}
-//           />
-//           {errors.accountNumber && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.accountNumber.message}
-//             </p>
-//           )}
-//         </Field>
-
-//         {/* ifsc code */}
-//         <Field className="md:col-span-2">
-//           <FieldLabel htmlFor="ifscCode">IFSC Code</FieldLabel>
-//           <Input
-//             id="ifscCode"
-//             placeholder="IFSC123456"
-//             {...register("ifscCode")}
-//             className={cn(errors.ifscCode && "border-destructive")}
-//           />
-//           {errors.ifscCode && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.ifscCode.message}
-//             </p>
-//           )}
-//         </Field>
-//         {/* branch name */}
-//         <Field>
-//           <FieldLabel htmlFor="branchName">Branch Name</FieldLabel>
-//           <Input
-//             id="branchName"
-//             placeholder=""
-//             {...register("branchName")}
-//             className={cn(errors.branchName && "border-destructive")}
-//           />
-//           {errors.branchName && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.branchName.message}
-//             </p>
-//           )}
-//         </Field>
-//         {/* upiid */}
-//         <Field>
-//           <FieldLabel htmlFor="upiId">UPI ID</FieldLabel>
-//           <Input
-//             id="upiId"
-//             placeholder="upi@bank"
-//             {...register("upiId")}
-//             className={cn(errors.upiId && "border-destructive")}
-//           />
-//           {errors.upiId && (
-//             <p className="text-sm text-destructive mt-1">
-//               {errors.upiId.message}
-//             </p>
-//           )}
-//         </Field>
-//         <ImageField
-//           label="Bank Proof"
-//           docName="bankProof"
-//           onUploadSuccess={(data) => {
-//              methods.setValue("bankProof", {
-//                url: data.url,
-//                public_id: data.public_id,
-//                resource_type: data.resource_type
-//              }, { shouldValidate: true });
-//           }}
-//         />
-
-//       </div>
-//     </FieldGroup>
-//   )
-// }
 "use client";
 
-import { useFormContext, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SignUpProps } from "@/schema/auth";
 import ImageField from "./image-input";
-import { Landmark, User, CreditCard, MapPin } from "lucide-react";
+import { Landmark, User, CreditCard, MapPin, ShieldCheck } from "lucide-react";
 
 export const Step_2 = ({
   methods,
@@ -172,101 +14,171 @@ export const Step_2 = ({
   currentStep: number;
   methods: UseFormReturn<SignUpProps>;
 }) => {
-  const { register, formState: { errors }, setValue } = methods;
+  const {
+    register,
+    formState: { errors },
+    setValue,
+  } = methods;
 
-  const inputClasses = "h-12 bg-white/[0.03] border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted-foreground/40";
+  const inputClasses =
+    "h-10 sm:h-11 bg-white/5 border-white/15 text-white placeholder:text-zinc-500 focus:border-[#0084ff] focus:ring-2 focus:ring-[#0084ff]/20 rounded-xl text-xs transition-all";
 
   return (
-    <FieldGroup className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <FieldGroup className="space-y-6 sm:space-y-7 animate-in fade-in duration-300 text-white">
+      {/* Mobile-Responsive Header */}
+      <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-white/10 gap-2">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-emerald-400 shrink-0 shadow-xs">
+            <Landmark className="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-serif font-normal text-white truncate">
+              Step 2: Settlement Bank Account &amp; Payouts
+            </h2>
+            <p className="text-[11px] sm:text-xs text-zinc-300 font-light truncate sm:whitespace-normal">
+              Bank details for receiving guest booking payouts and financial settlements.
+            </p>
+          </div>
+        </div>
+        <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-medium text-emerald-300 border border-emerald-500/25 shrink-0">
+          Payout Account
+        </span>
+      </div>
 
       {/* Section 1: Account Holder & Bank Name */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
         <Field>
-          <div className="flex items-center gap-2 mb-2">
-            <User className="w-4 h-4 text-primary/70" />
-            <FieldLabel className="text-slate-200 font-medium">Account Holder Name</FieldLabel>
+          <div className="flex items-center gap-2 mb-1.5">
+            <User className="w-4 h-4 text-emerald-400" />
+            <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+              Account Holder Name
+            </FieldLabel>
           </div>
           <Input
             id="accountHolderName"
-            placeholder="Name as per Bank Records"
+            placeholder="Name as per Bank Passbook"
             {...register("accountHolderName")}
-            className={cn(inputClasses, errors.accountHolderName && "border-destructive/50")}
+            className={cn(
+              inputClasses,
+              errors.accountHolderName && "border-rose-500 focus:ring-rose-500/20"
+            )}
           />
-          {errors.accountHolderName && <p className="text-xs text-destructive mt-1.5">{errors.accountHolderName.message}</p>}
+          {errors.accountHolderName && (
+            <p className="text-xs font-medium text-rose-400 mt-1.5">
+              {errors.accountHolderName.message}
+            </p>
+          )}
         </Field>
 
         <Field>
-          <div className="flex items-center gap-2 mb-2">
-            <Landmark className="w-4 h-4 text-primary/70" />
-            <FieldLabel className="text-slate-200 font-medium">Bank Name</FieldLabel>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Landmark className="w-4 h-4 text-emerald-400" />
+            <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+              Bank Name
+            </FieldLabel>
           </div>
           <Input
             id="bankName"
-            placeholder="e.g. HDFC Bank"
+            placeholder="e.g. HDFC Bank / State Bank of India"
             {...register("bankName")}
-            className={cn(inputClasses, errors.bankName && "border-destructive/50")}
+            className={cn(
+              inputClasses,
+              errors.bankName && "border-rose-500 focus:ring-rose-500/20"
+            )}
           />
-          {errors.bankName && <p className="text-xs text-destructive mt-1.5">{errors.bankName.message}</p>}
+          {errors.bankName && (
+            <p className="text-xs font-medium text-rose-400 mt-1.5">
+              {errors.bankName.message}
+            </p>
+          )}
         </Field>
       </div>
 
-      {/* Section 2: Numbers & Routing */}
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Section 2: Numbers & Routing Box */}
+      <div className="p-4 sm:p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 sm:space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field>
-            <div className="flex items-center gap-2 mb-2">
-              <CreditCard className="w-4 h-4 text-primary/70" />
-              <FieldLabel className="text-slate-200 font-medium">Account Number</FieldLabel>
+            <div className="flex items-center gap-2 mb-1.5">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+              <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+                Account Number
+              </FieldLabel>
             </div>
             <Input
               id="accountNumber"
-              type="password" // Keep it masked initially for privacy
+              type="password"
               placeholder="0000 0000 0000"
               {...register("accountNumber")}
-              className={cn(inputClasses, "font-mono tracking-widest", errors.accountNumber && "border-destructive/50")}
+              className={cn(
+                inputClasses,
+                "font-mono tracking-widest",
+                errors.accountNumber && "border-rose-500 focus:ring-rose-500/20"
+              )}
             />
-            {errors.accountNumber && <p className="text-xs text-destructive mt-1.5">{errors.accountNumber.message}</p>}
+            {errors.accountNumber && (
+              <p className="text-xs font-medium text-rose-400 mt-1.5">
+                {errors.accountNumber.message}
+              </p>
+            )}
           </Field>
 
           <Field>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold text-primary/70 border border-primary/40 px-1 rounded">IFSC</span>
-              <FieldLabel className="text-slate-200 font-medium">IFSC Code</FieldLabel>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                IFSC
+              </span>
+              <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+                IFSC Code
+              </FieldLabel>
             </div>
             <Input
               id="ifscCode"
               placeholder="HDFC0001234"
               {...register("ifscCode")}
-              className={cn(inputClasses, "uppercase", errors.ifscCode && "border-destructive/50")}
+              className={cn(
+                inputClasses,
+                "uppercase font-mono",
+                errors.ifscCode && "border-rose-500 focus:ring-rose-500/20"
+              )}
             />
-            {errors.ifscCode && <p className="text-xs text-destructive mt-1.5">{errors.ifscCode.message}</p>}
+            {errors.ifscCode && (
+              <p className="text-xs font-medium text-rose-400 mt-1.5">
+                {errors.ifscCode.message}
+              </p>
+            )}
           </Field>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field>
-            <div className="flex items-center gap-2 mb-2">
-              <MapPin className="w-4 h-4 text-primary/70" />
-              <FieldLabel className="text-slate-200 font-medium">Branch Name</FieldLabel>
+            <div className="flex items-center gap-2 mb-1.5">
+              <MapPin className="w-4 h-4 text-emerald-400" />
+              <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+                Branch Location
+              </FieldLabel>
             </div>
             <Input
               id="branchName"
-              placeholder="e.g. Downtown Branch"
+              placeholder="e.g. Fort, Mumbai"
               {...register("branchName")}
-              className={cn(inputClasses)}
+              className={inputClasses}
             />
           </Field>
 
           <Field>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold text-primary/70 border border-primary/40 px-1 rounded">UPI</span>
-              <FieldLabel className="text-slate-200 font-medium">UPI ID (Optional)</FieldLabel>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                UPI
+              </span>
+              <FieldLabel className="text-xs font-medium text-zinc-300 tracking-wide">
+                UPI ID (Optional)
+              </FieldLabel>
             </div>
             <Input
               id="upiId"
-              placeholder="username@bank"
+              placeholder="business@okaxis"
               {...register("upiId")}
-              className={cn(inputClasses)}
+              className={inputClasses}
             />
           </Field>
         </div>
@@ -274,28 +186,41 @@ export const Step_2 = ({
 
       {/* Section 3: Bank Proof Upload */}
       <div className="space-y-4">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-primary/80 uppercase tracking-widest">Bank Verification</h3>
-          <p className="text-xs text-muted-foreground">Upload a cancelled cheque or passbook front page.</p>
+        <div>
+          <h3 className="text-xs font-medium uppercase tracking-wider text-white flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Bank Verification Document</span>
+          </h3>
+          <p className="text-[11px] sm:text-xs text-zinc-400 font-light">
+            Upload a clear photo of your cancelled cheque or bank passbook front page.
+          </p>
         </div>
 
-        <div className="max-w-md">
+        <div className="w-full sm:max-w-md p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10">
           <ImageField
-            label="Bank Proof"
+            label="Cancelled Cheque / Passbook Copy"
             docName="bankProof"
             onUploadSuccess={(data) => {
-              setValue("bankProof", {
-                url: data.url,
-                public_id: data.public_id,
-                resource_type: data.resource_type
-              }, { shouldValidate: true });
+              setValue(
+                "bankProof",
+                {
+                  url: data.url,
+                  public_id: data.public_id,
+                  resource_type: data.resource_type,
+                },
+                { shouldValidate: true }
+              );
             }}
             onRemove={() => {
-              setValue("bankProof", {
-                url: "",
-                public_id: "",
-                resource_type: "image"
-              }, { shouldValidate: true });
+              setValue(
+                "bankProof",
+                {
+                  url: "",
+                  public_id: "",
+                  resource_type: "image",
+                },
+                { shouldValidate: true }
+              );
             }}
           />
         </div>
